@@ -1,12 +1,11 @@
 package com.example.findit;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.SystemClock;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -15,5 +14,14 @@ public class MainActivity extends AppCompatActivity {
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Handler to delay the transition by 3 seconds (3000 milliseconds)
+        new Handler().postDelayed(() ->
+        {
+            // Intent to start the second activity
+            Intent intent = new Intent(MainActivity.this, SearchPageActivity.class);
+            startActivity(intent);
+            finish(); // Finish the main activity
+        }, 3000); // 3000 milliseconds delay
     }
 }
