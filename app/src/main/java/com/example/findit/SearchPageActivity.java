@@ -9,7 +9,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class SearchPageActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private Button btnProfileSettings;
+    private Button btnUploadGallery;
+    private Button btnTakePicture;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -17,8 +18,17 @@ public class SearchPageActivity extends AppCompatActivity implements View.OnClic
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search_page);
 
-        btnProfileSettings = findViewById(R.id.btnProfileSettings);
-        btnProfileSettings.setOnClickListener(this);
+        init();
+    }
+
+    private void init()
+    {
+        btnUploadGallery = findViewById(R.id.btnUploadGalleryID);
+        btnTakePicture = findViewById(R.id.btnTakePictureID);
+
+
+        btnUploadGallery.setOnClickListener(this);
+        btnTakePicture.setOnClickListener(this);
     }
 
     @Override
