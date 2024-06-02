@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    tools:context=".LoginActivity">
+
+    <ImageView
+        android:id="@+id/logoImageView"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:src="@drawable/waving_fox"
+        android:layout_gravity="center"
+        android:layout_marginTop="80dp"
+        android:contentDescription="Logo Image" />
+
+    <EditText
+        android:id="@+id/etxtEmailID"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Email"
+        android:inputType="textEmailAddress"
+        android:layout_marginTop="80dp" />
+
+    <EditText
+        android:id="@+id/etxtPasswordID"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Password"
+        android:inputType="textPassword"
+        android:layout_marginTop="8dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="16dp">
+
+        <Button
+            android:id="@+id/btnLoginID"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Login"
+            android:textSize="18sp"
+            android:backgroundTint="#D5562E"
+            android:textColor="@android:color/white" />
+
+        <Button
+            android:id="@+id/btnSignupID"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Sign Up"
+            android:textSize="18sp"
+            android:backgroundTint="#D5562E"
+            android:textColor="@android:color/white"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnResetPasswordID"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Reset Password"
+        android:textSize="18sp"
+        android:backgroundTint="#D5562E"
+        android:textColor="@android:color/white"
+        android:layout_marginTop="16dp"
+        android:layout_gravity="center_horizontal" />
+
+</LinearLayout>

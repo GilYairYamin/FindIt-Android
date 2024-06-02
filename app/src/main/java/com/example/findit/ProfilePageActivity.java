@@ -1,24 +1,41 @@
 package com.example.findit;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
+import com.google.firebase.storage.FirebaseStorage;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class ProfilePageActivity extends AppCompatActivity implements View.OnClickListener{
 
     private Button btnSave, btnCancel;
-    private EditText txtFirstName, txtSecondName, txtEmail, txtCellphone, txtAddress;
+    private EditText txtFirstName, txtSecondName, txtEmail, txtCellphone, txtPassword;
     private ImageView profilePicture;
 
-    private String firstName, secondName, email, address, cellphone;
+    private String firstName, secondName, email, password, cellphone;
 
+    private User user;
 
+    FirebaseAuth firebaseAuth;
+    FirebaseFirestore firestoreDB;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -27,72 +44,46 @@ public class ProfilePageActivity extends AppCompatActivity implements View.OnCli
         setContentView(R.layout.activity_profile_page);
 
         init();
-        getSharedPreferences();
 
-        if (firstName != null)
-            displaySavedSettings();
-        else
-            // Disable the "Cancel" button if it's the first time on this screen
-            btnCancel.setEnabled(false);
-    }
-
-    private void displaySavedSettings()
-    {
-        txtFirstName.setText(firstName);
-        txtSecondName.setText(secondName);
-        txtEmail.setText(email);
-        txtAddress.setText(address);
-        txtCellphone.setText(String.valueOf(cellphone));
-    }
-
-    private void getSharedPreferences()
-    {
-        SharedPreferences sp = getSharedPreferences("profilePref", MODE_PRIVATE);
-        firstName = sp.getString("firstName", null);
-        secondName = sp.getString("secondName", null);
-        email = sp.getString("email", null);
-        cellphone = sp.getString("cellphone", null);
-        address = sp.getString("address", null);
-    }
-
-    private boolean saveToSharedPreferences()
-    {
-        // Get the text from the EditText fields
-        firstName = txtFirstName.getText().toString();
-        secondName = txtSecondName.getText().toString();
-        email = txtEmail.getText().toString();
-        address = txtAddress.getText().toString();
-        cellphone = txtCellphone.getText().toString();
-
-        // Validate that the first name is not empty
-        if (firstName.isEmpty())
+        FirebaseUser currentUser = firebaseAuth.getCurrentUser();
+        if(currentUser != null)
         {
-            Toast.makeText(this, "First Name is required", Toast.LENGTH_SHORT).show();
-            return false; // Exit the method if validation fails
+            disableEmailAndPasswordFields();
+            displayUserProfile(currentUser.getEmail());
         }
-
-        // Validate the email format
-        if (!email.isEmpty() && !isValidEmail(email))
-        {
-            Toast.makeText(this, "Please enter a valid email address", Toast.LENGTH_SHORT).show();
-            return false; // Exit the method if validation fails
-        }
-
-        SharedPreferences sp = getSharedPreferences("profilePref", MODE_PRIVATE);
-        SharedPreferences.Editor editor = sp.edit();
-
-        editor.putString("firstName", firstName);
-        editor.putString("secondName", secondName);
-        editor.putString("email", email);
-        editor.putString("cellphone", cellphone);
-        editor.putString("address", address);
-
-        editor.apply();
-
-        // Show a toast message indicating that the settings were saved
-        Toast.makeText(this, "Profile settings saved", Toast.LENGTH_SHORT).show();
-        return true;
     }
+
+    private void disableEmailAndPasswordFields()
+    {
+        txtEmail.setEnabled(false);
+        txtPassword.setEnabled(false);
+    }
+
+    private void displayUserProfile(String id)
+    {
+        DocumentReference itemRef = firestoreDB.collection("Users").document(id);
+
+        itemRef.get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists())
+                    {
+                        User user = documentSnapshot.toObject(User.class);
+                        txtFirstName.setText(user.getFirstName());
+                        txtSecondName.setText(user.getSecondName());
+                        txtEmail.setText(user.getEmail());
+                        txtCellphone.setText(user.getCellphone());
+                        txtPassword.setText("******");
+                    }
+
+                    else
+                        Toast.makeText(ProfilePageActivity.this, "Failed to find document.", Toast.LENGTH_LONG).show();
+
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(ProfilePageActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                });
+    }
+
 
     private boolean isValidEmail(String email)
     {
@@ -101,31 +92,128 @@ public class ProfilePageActivity extends AppCompatActivity implements View.OnCli
     }
     private void init()
     {
-        btnSave = findViewById(R.id.btnSaveSettingsID);
-        btnCancel = findViewById(R.id.btnCancelSettingsID);
+        btnSave = findViewById(R.id.btnSaveRegisterID);
+        btnCancel = findViewById(R.id.btnCancelRegisterID);
         txtFirstName = findViewById(R.id.etxtFirstNameID);
         txtSecondName = findViewById(R.id.etxtSecondNameID);
         txtEmail = findViewById(R.id.etxtEmailID);
         txtCellphone = findViewById(R.id.etxtPhoneNumberID);
-        txtAddress = findViewById(R.id.etxtAddressID);
+        txtPassword = findViewById(R.id.etxtPasswordID);
 
 
         btnCancel.setOnClickListener(this);
         btnSave.setOnClickListener(this);
+
+        firebaseAuth = FirebaseAuth.getInstance();
+        firestoreDB = FirebaseFirestore.getInstance();
+    }
+
+    private void createUser()
+    {
+        if (txtEmail.getText().toString().isEmpty())
+        {
+            Toast.makeText(ProfilePageActivity.this, "Email address is mandatory.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        if (!isValidEmail(txtEmail.getText().toString()))
+        {
+            Toast.makeText(ProfilePageActivity.this, "Invalid email address.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        if (txtPassword.getText().toString().isEmpty())
+        {
+            Toast.makeText(ProfilePageActivity.this, "Password is missing.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        FirebaseUser currentUser = firebaseAuth.getCurrentUser();
+        if(currentUser == null)
+            signUp();
+        else
+            updateUserFromDB();
+    }
+
+    private void addUserToDB()
+    {
+        user = new User(txtEmail.getText().toString());
+        user.setCellphone(txtCellphone.getText().toString());
+        user.setFirstName(txtFirstName.getText().toString());
+        user.setSecondName(txtSecondName.getText().toString());
+
+        // Define the document ID using the user's email
+        String documentId = user.getEmail();
+
+        // Save data with the defined document ID
+        DocumentReference userRef = firestoreDB.collection("Users").document(documentId);
+        userRef.set(user)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(ProfilePageActivity.this, "User added successfully.", Toast.LENGTH_LONG).show();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(ProfilePageActivity.this, "Failed to add user.\n" + e.getMessage(), Toast.LENGTH_LONG).show();
+                });
+    }
+
+    private void updateUserFromDB()
+    {
+        // Create a User object with the updated details
+        user = new User(txtEmail.getText().toString());
+        user.setCellphone(txtCellphone.getText().toString());
+        user.setFirstName(txtFirstName.getText().toString());
+        user.setSecondName(txtSecondName.getText().toString());
+
+        // Convert the User object to a Map
+        Map<String, Object> userMap = new HashMap<>();
+        userMap.put("cellphone", user.getCellphone());
+        userMap.put("firstName", user.getFirstName());
+        userMap.put("secondName", user.getSecondName());
+
+        // Reference to the document to be updated
+        DocumentReference itemRef = firestoreDB.collection("Users").document(user.getEmail());
+
+        // Update the document
+        itemRef.set(userMap, SetOptions.merge())
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(ProfilePageActivity.this, "Profile updated successfully.", Toast.LENGTH_LONG).show();
+                    startActivity(new Intent(ProfilePageActivity.this, SearchPageActivity.class));
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(ProfilePageActivity.this, "Failed to update profile.\n" + e.getMessage(), Toast.LENGTH_LONG).show();
+                });
+    }
+
+    private void signUp()
+    {
+        Task<AuthResult> signUpTask = firebaseAuth.createUserWithEmailAndPassword(txtEmail.getText().toString(), txtPassword.getText().toString());
+        signUpTask.addOnSuccessListener(new OnSuccessListener<AuthResult>()
+        {
+            @Override
+            public void onSuccess(AuthResult authResult)
+            {
+                Toast.makeText(ProfilePageActivity.this, "Registered Successfully.", Toast.LENGTH_LONG).show();
+                addUserToDB();
+                startActivity(new Intent(ProfilePageActivity.this, SearchPageActivity.class));
+            }
+        });
+        signUpTask.addOnFailureListener(new OnFailureListener()
+        {
+            @Override
+            public void onFailure(Exception e)
+            {
+                Toast.makeText(ProfilePageActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     @Override
     public void onClick(View v)
     {
-        boolean succeed = false;
+        if (v.getId() == R.id.btnCancelRegisterID)
+            finish();
 
-        if (v.getId() == R.id.btnSaveSettingsID)
-            succeed = saveToSharedPreferences();
-
-        if (succeed || v.getId() == R.id.btnCancelSettingsID)
-        {
-            Intent btnsIntent = new Intent(ProfilePageActivity.this, SearchPageActivity.class);
-            startActivity(btnsIntent);
-        }
+        if (v.getId() == R.id.btnSaveRegisterID)
+            createUser();
     }
 }

@@ -14,7 +14,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Profile Settings"
+            android:text="My Profile"
             android:textSize="24sp"
             android:textStyle="bold"
             android:layout_gravity="center_horizontal"
@@ -148,7 +148,7 @@
                 android:maxLength="13" />
         </LinearLayout>
 
-        <!-- Address Section -->
+        <!-- Password Section -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -159,18 +159,18 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Address:"
+                android:text="Password:"
                 android:textSize="18sp"
                 android:paddingEnd="16dp" />
 
             <EditText
-                android:id="@+id/etxtAddressID"
+                android:id="@+id/etxtPasswordID"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="Enter Address"
+                android:hint="Enter Password"
                 android:textSize="18sp"
-                android:inputType="textPostalAddress" />
+                android:inputType="textPassword" />
         </LinearLayout>
 
         <!-- Buttons Section -->
@@ -182,25 +182,23 @@
             android:padding="16dp">
 
             <Button
-                android:id="@+id/btnCancelSettingsID"
+                android:id="@+id/btnCancelRegisterID"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginRight="30dp"
                 android:layout_weight="1"
-                android:backgroundTint="@color/button_color_state"
-                android:onClick="cancelProfileSettings"
+                android:backgroundTint="#D5562E"
                 android:text="Cancel"
                 android:textColor="#FFFFFF"
                 android:textSize="18sp" />
 
             <Button
-                android:id="@+id/btnSaveSettingsID"
+                android:id="@+id/btnSaveRegisterID"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
                 android:layout_weight="1"
-                android:backgroundTint="@color/button_color_state"
-                android:onClick="saveProfileSettings"
+                android:backgroundTint="#D5562E"
                 android:text="Save"
                 android:textColor="#FFFFFF"
                 android:textSize="18sp" />
