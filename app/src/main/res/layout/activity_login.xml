@@ -10,11 +10,11 @@
 
     <ImageView
         android:id="@+id/logoImageView"
-        android:layout_width="300dp"
-        android:layout_height="300dp"
+        android:layout_width="400dp"
+        android:layout_height="350dp"
         android:src="@drawable/waving_fox"
         android:layout_gravity="center"
-        android:layout_marginTop="80dp"
+        android:layout_marginTop="40dp"
         android:contentDescription="Logo Image" />
 
     <EditText
@@ -23,7 +23,7 @@
         android:layout_height="wrap_content"
         android:hint="Email"
         android:inputType="textEmailAddress"
-        android:layout_marginTop="80dp" />
+        android:layout_marginTop="60dp" />
 
     <EditText
         android:id="@+id/etxtPasswordID"

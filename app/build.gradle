@@ -41,4 +41,14 @@ dependencies {
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
+
+    // dependency for firebase core.
+
+    implementation "com.google.firebase:firebase-core:15.0.2"
+
+    // Firebase ML dependency
+
+    implementation "com.google.firebase:firebase-ml-vision:24.0.3"
+
+    implementation "com.google.firebase:firebase-ml-vision-image-label-model:20.0.1"
 }

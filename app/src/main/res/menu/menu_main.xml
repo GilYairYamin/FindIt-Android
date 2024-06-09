@@ -23,4 +23,10 @@
         android:title="Search History"
         android:orderInCategory="100"
         app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_enable_location"
+        android:title="Enable Location Permission"
+        android:orderInCategory="100"
+        app:showAsAction="never" />
 </menu>
