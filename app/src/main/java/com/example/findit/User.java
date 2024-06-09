@@ -2,14 +2,14 @@ package com.example.findit;
 
 public class User {
 
-    private String firstName, secondName, email, cellphone;
+    private String firstName, lastName, email, cellphone;
 
     public User(String email)
     {
         this.email = email;
 
         this.firstName = "";
-        this.secondName = "";
+        this.lastName = "";
         this.cellphone = "";
     }
 
@@ -22,8 +22,8 @@ public class User {
         this.firstName = firstName;
     }
 
-    public void setSecondName(String secondName) {
-        this.secondName = secondName;
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public void setEmail(String email) {
@@ -39,8 +39,8 @@ public class User {
         return firstName;
     }
 
-    public String getSecondName() {
-        return secondName;
+    public String getLastName() {
+        return lastName;
     }
 
     public String getEmail() {

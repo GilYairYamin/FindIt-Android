@@ -28,6 +28,7 @@
         android:layout_height="60dp"
         android:layout_gravity="center_horizontal"
         android:text="Return"
-        android:backgroundTint="#D5562E" />
+        android:backgroundTint="#D5562E"
+        android:textColor="#FFFFFF"/>
 
 </LinearLayout>

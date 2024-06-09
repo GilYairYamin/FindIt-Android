@@ -72,7 +72,11 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         signInTask.addOnCompleteListener(task ->
         {
             if(task.isSuccessful())
-                startActivity(new Intent(LoginActivity.this, SearchPageActivity.class));
+            {
+                Intent intent = new Intent(LoginActivity.this, SearchPageActivity.class);
+                startActivity(intent);
+                finish();
+            }
             else
                 Toast.makeText(LoginActivity.this, "" + task.getException().getMessage(), Toast.LENGTH_LONG).show();
 
@@ -109,6 +113,9 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             resetPassword();
 
         if (v.getId() == R.id.btnSignupID)
+        {
             startActivity(new Intent(LoginActivity.this, ProfilePageActivity.class));
+            finish();
+        }
     }
 }

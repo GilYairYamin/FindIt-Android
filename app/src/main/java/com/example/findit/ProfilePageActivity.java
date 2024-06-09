@@ -19,7 +19,6 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
-import com.google.firebase.storage.FirebaseStorage;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,7 +26,7 @@ import java.util.Map;
 public class ProfilePageActivity extends AppCompatActivity implements View.OnClickListener{
 
     private Button btnSave, btnCancel;
-    private EditText txtFirstName, txtSecondName, txtEmail, txtCellphone, txtPassword;
+    private EditText txtFirstName, txtLastName, txtEmail, txtCellphone, txtPassword;
     private ImageView profilePicture;
 
     private String firstName, secondName, email, password, cellphone;
@@ -69,7 +68,7 @@ public class ProfilePageActivity extends AppCompatActivity implements View.OnCli
                     {
                         User user = documentSnapshot.toObject(User.class);
                         txtFirstName.setText(user.getFirstName());
-                        txtSecondName.setText(user.getSecondName());
+                        txtLastName.setText(user.getLastName());
                         txtEmail.setText(user.getEmail());
                         txtCellphone.setText(user.getCellphone());
                         txtPassword.setText("******");
@@ -95,7 +94,7 @@ public class ProfilePageActivity extends AppCompatActivity implements View.OnCli
         btnSave = findViewById(R.id.btnSaveRegisterID);
         btnCancel = findViewById(R.id.btnCancelRegisterID);
         txtFirstName = findViewById(R.id.etxtFirstNameID);
-        txtSecondName = findViewById(R.id.etxtSecondNameID);
+        txtLastName = findViewById(R.id.etxtLastNameID);
         txtEmail = findViewById(R.id.etxtEmailID);
         txtCellphone = findViewById(R.id.etxtPhoneNumberID);
         txtPassword = findViewById(R.id.etxtPasswordID);
@@ -140,7 +139,7 @@ public class ProfilePageActivity extends AppCompatActivity implements View.OnCli
         user = new User(txtEmail.getText().toString());
         user.setCellphone(txtCellphone.getText().toString());
         user.setFirstName(txtFirstName.getText().toString());
-        user.setSecondName(txtSecondName.getText().toString());
+        user.setLastName(txtLastName.getText().toString());
 
         // Define the document ID using the user's email
         String documentId = user.getEmail();
@@ -162,13 +161,13 @@ public class ProfilePageActivity extends AppCompatActivity implements View.OnCli
         user = new User(txtEmail.getText().toString());
         user.setCellphone(txtCellphone.getText().toString());
         user.setFirstName(txtFirstName.getText().toString());
-        user.setSecondName(txtSecondName.getText().toString());
+        user.setLastName(txtLastName.getText().toString());
 
         // Convert the User object to a Map
         Map<String, Object> userMap = new HashMap<>();
         userMap.put("cellphone", user.getCellphone());
         userMap.put("firstName", user.getFirstName());
-        userMap.put("secondName", user.getSecondName());
+        userMap.put("secondName", user.getLastName());
 
         // Reference to the document to be updated
         DocumentReference itemRef = firestoreDB.collection("Users").document(user.getEmail());
