@@ -45,19 +45,13 @@ import java.util.Locale;
 import java.util.Random;
 
 public class SearchPageActivity extends AppCompatActivity implements LocationListener, View.OnClickListener {
-
     private Button btnUploadGallery, btnTakePicture, btnSearch;
-
     private ActivityResultLauncher<Intent> cameraLauncher;
     private Bitmap imageBitmap;
-
     private ImageView imageView;
-
     private ActivityResultLauncher<String> requestPermissionLauncher;
     private LocationManager locationManager;
-
     private String locationString = "Unknown";
-
     private String bestLabel;
 
     @Override
@@ -69,45 +63,36 @@ public class SearchPageActivity extends AppCompatActivity implements LocationLis
 
         cameraLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
-                new ActivityResultCallback<ActivityResult>() {
-                    @Override
-                    public void onActivityResult(ActivityResult result) {
-                        if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                            Bundle extras = result.getData().getExtras();
-                            if (extras != null) {
-                                imageBitmap = (Bitmap) extras.get("data");
-                                imageView.setImageBitmap(imageBitmap);
-                            }
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        Bundle extras = result.getData().getExtras();
+                        if (extras != null) {
+                            imageBitmap = (Bitmap) extras.get("data");
+                            imageView.setImageBitmap(imageBitmap);
                         }
                     }
                 });
 
         requestPermissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestPermission(), isGranted -> {
-                    if (isGranted)
+                    if (isGranted) {
                         requestSingleLocationUpdate();
-                    else
-                        Toast.makeText(this, "Location permission denied. You may enable locations via the menu.", Toast.LENGTH_LONG).show();
-
+                    } else {
+                        Toast.makeText(this, "Location permission denied.", Toast.LENGTH_LONG).show();
+                    }
                 });
 
         locationManager = getSystemService(LocationManager.class);
     }
 
-
-
-
-    private void takePictureFromCamera()
-    {
+    private void takePictureFromCamera() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         cameraLauncher.launch(takePictureIntent);
     }
 
-    private void uploadImageToStorage(String name)
-    {
+    private void uploadImageToStorage(String name, String location) {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user != null)
-        {
+        if (user != null) {
             Random random = new Random();
             int id = random.nextInt(1000000000);
 
@@ -117,7 +102,7 @@ public class SearchPageActivity extends AppCompatActivity implements LocationLis
 
             // Create custom metadata
             StorageMetadata metadata = new StorageMetadata.Builder()
-                    .setCustomMetadata("location", locationString)
+                    .setCustomMetadata("location", location)
                     .setCustomMetadata("author", email)
                     .build();
 
@@ -126,57 +111,43 @@ public class SearchPageActivity extends AppCompatActivity implements LocationLis
             byte[] imageBytes = stream.toByteArray();
             UploadTask uploadTask = storageRef.putBytes(imageBytes, metadata);
 
-
             uploadTask.addOnFailureListener(e -> {
                 Toast.makeText(SearchPageActivity.this, "Upload image failed! " + e.getMessage(), Toast.LENGTH_LONG).show();
             }).addOnSuccessListener(taskSnapshot -> {
                 Toast.makeText(SearchPageActivity.this, "Upload image success.", Toast.LENGTH_LONG).show();
             });
-        }
-        else
+        } else {
             Toast.makeText(this, "User not authenticated", Toast.LENGTH_SHORT).show();
-
+        }
     }
 
-
-    private void recognizeImage()
-    {
+    private void recognizeImage(Runnable onComplete) {
         FirebaseVisionImage image = FirebaseVisionImage.fromBitmap(imageBitmap);
         FirebaseVisionImageLabeler labeler = FirebaseVision.getInstance().getOnDeviceImageLabeler();
 
-        labeler.processImage(image).addOnSuccessListener(new OnSuccessListener<List<FirebaseVisionImageLabel>>() {
-            @Override
-            public void onSuccess(List<FirebaseVisionImageLabel> firebaseVisionImageLabels)
-            {
-                if (firebaseVisionImageLabels.isEmpty())
-                {
-                    Toast.makeText(SearchPageActivity.this, "No labels found.", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                // Find the label with the highest confidence
-                bestLabel = "Nothing Found";
-                float highestConfidence = 0;
-
-                for (FirebaseVisionImageLabel label : firebaseVisionImageLabels)
-                {
-                    if (label.getConfidence() > highestConfidence)
-                    {
-                        highestConfidence = label.getConfidence();
-                        bestLabel = label.getText();
-                    }
-                }
-
-
-                uploadImageToStorage(bestLabel);
-                Toast.makeText(SearchPageActivity.this, "Best Label: " + bestLabel, Toast.LENGTH_SHORT).show();
+        labeler.processImage(image).addOnSuccessListener(firebaseVisionImageLabels -> {
+            if (firebaseVisionImageLabels.isEmpty()) {
+                Toast.makeText(SearchPageActivity.this, "No labels found.", Toast.LENGTH_SHORT).show();
+                onComplete.run();
+                return;
             }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(Exception e)
-            {
-                Toast.makeText(SearchPageActivity.this, "Failed to get data.", Toast.LENGTH_SHORT).show();
+
+            // Find the label with the highest confidence
+            bestLabel = "Nothing Found";
+            float highestConfidence = 0;
+
+            for (FirebaseVisionImageLabel label : firebaseVisionImageLabels) {
+                if (label.getConfidence() > highestConfidence) {
+                    highestConfidence = label.getConfidence();
+                    bestLabel = label.getText();
+                }
             }
+
+            Toast.makeText(SearchPageActivity.this, "Best Label: " + bestLabel, Toast.LENGTH_SHORT).show();
+            onComplete.run();
+        }).addOnFailureListener(e -> {
+            Toast.makeText(SearchPageActivity.this, "Failed to get data.", Toast.LENGTH_SHORT).show();
+            onComplete.run();
         });
     }
 
@@ -191,8 +162,7 @@ public class SearchPageActivity extends AppCompatActivity implements LocationLis
         btnSearch.setOnClickListener(this);
     }
 
-    private void resetPassword()
-    {
+    private void resetPassword() {
         FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
 
         FirebaseUser currentUser = firebaseAuth.getCurrentUser();
@@ -207,82 +177,76 @@ public class SearchPageActivity extends AppCompatActivity implements LocationLis
     }
 
     @SuppressLint("MissingPermission")
-    private void requestSingleLocationUpdate()
-    {
-        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
+    private void requestSingleLocationUpdate() {
+        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, this, null);
-        else
-            Toast.makeText(this, "GPS Disabled!", Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(this, "GPS Disabled! Uploading with default location.", Toast.LENGTH_LONG).show();
+            uploadImageToStorage(bestLabel, "Unknown");
+        }
+    }
+
+    private boolean isPermissionGranted() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
 
     @Override
-    public void onLocationChanged(Location location)
-    {
-
+    public void onLocationChanged(Location location) {
         double latitude = location.getLatitude();
         double longitude = location.getLongitude();
         locationString = latitude + ", " + longitude;
 
-        if (Geocoder.isPresent())
-        {
+        if (Geocoder.isPresent()) {
             Geocoder geocoder = new Geocoder(this, Locale.getDefault());
-            try
-            {
+            try {
                 List<Address> addressList = geocoder.getFromLocation(latitude, longitude, 1);
-                if (addressList != null && !addressList.isEmpty())
-                {
+                if (addressList != null && !addressList.isEmpty()) {
                     Address address = addressList.get(0);
-
                     locationString = address.getAddressLine(0);
                 }
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 e.printStackTrace(); // Print the stack trace for debugging purposes
                 Toast.makeText(this, "Failed to get address from location", Toast.LENGTH_SHORT).show();
             }
-        }
-        else
+        } else {
             Toast.makeText(this, "Geocoder not present", Toast.LENGTH_SHORT).show();
-
+        }
 
         // Stop listening for location updates
         locationManager.removeUpdates(this);
+
+        uploadImageToStorage(bestLabel, locationString);
     }
 
     @Override
-    public void onProviderEnabled(String provider)
-    {
+    public void onProviderEnabled(String provider) {
         Toast.makeText(this, "GPS Enabled!", Toast.LENGTH_LONG).show();
     }
 
     @Override
-    public void onProviderDisabled(String provider)
-    {
+    public void onProviderDisabled(String provider) {
         Toast.makeText(this, "GPS Disabled!", Toast.LENGTH_LONG).show();
     }
 
     @Override
-    public void onClick(View v)
-    {
-        if (v.getId() == R.id.btnSearchID)
-        {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-                requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
-
-            else
-                requestSingleLocationUpdate();
-
-
-            if (imageBitmap != null)
-                recognizeImage();
-            else
+    public void onClick(View v) {
+        if (v.getId() == R.id.btnSearchID) {
+            if (imageBitmap != null) {
+                recognizeImage(() -> {
+                    if (!isPermissionGranted()) {
+                        requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
+                    } else {
+                        requestSingleLocationUpdate();
+                    }
+                });
+            } else {
                 Toast.makeText(SearchPageActivity.this, "No image to search.", Toast.LENGTH_SHORT).show();
-
+            }
         }
 
-        if (v.getId() == R.id.btnTakePictureID)
+        if (v.getId() == R.id.btnTakePictureID) {
             takePictureFromCamera();
+        }
     }
 
     @Override
@@ -292,46 +256,42 @@ public class SearchPageActivity extends AppCompatActivity implements LocationLis
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item)
-    {
+    public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        if (id == R.id.action_sign_out)
-        {
+        if (id == R.id.action_sign_out) {
             FirebaseAuth.getInstance().signOut();
             startActivity(new Intent(SearchPageActivity.this, LoginActivity.class));
             finish();
             return true;
         }
 
-        if (id == R.id.action_reset_password)
-        {
+        if (id == R.id.action_reset_password) {
             resetPassword();
             return true;
         }
 
-        if (id == R.id.action_edit_profile)
-        {
+        if (id == R.id.action_edit_profile) {
             startActivity(new Intent(SearchPageActivity.this, ProfilePageActivity.class));
             return true;
         }
 
-        if (id == R.id.action_search_history)
-        {
+        if (id == R.id.action_search_history) {
             startActivity(new Intent(SearchPageActivity.this, HistoryActivity.class));
             return true;
         }
 
-        if (id == R.id.action_enable_location)
-        {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+        if (id == R.id.action_enable_location) {
+            if (!isPermissionGranted()) {
                 requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
-            else
+            } else {
                 Toast.makeText(this, "Location permission already granted", Toast.LENGTH_SHORT).show();
-
+            }
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
+
+
 }
