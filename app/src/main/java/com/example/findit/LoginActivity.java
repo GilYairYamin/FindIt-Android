@@ -15,27 +15,38 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
-
-public class LoginActivity extends AppCompatActivity implements View.OnClickListener {
-
+public class LoginActivity extends AppCompatActivity implements View.OnClickListener
+{
+    // UI elements
     private Button btnLogin, btnSignup, btnResetPassword;
     private EditText etxtEmail, etxtPassword;
+
+    // Firebase authentication instance
     FirebaseAuth firebaseAuth;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
+        // Initialize UI elements and Firebase instance
         init();
 
         firebaseAuth = FirebaseAuth.getInstance();
 
+        // Check if a user is already logged in
         FirebaseUser currentUser = firebaseAuth.getCurrentUser();
-        if(currentUser != null)
+        if (currentUser != null)
+        {
             startActivity(new Intent(LoginActivity.this, SearchPageActivity.class));
+            finish();
+        }
     }
 
+    /**
+     * Initialize UI elements and set up click listeners
+     */
     private void init()
     {
         btnLogin = findViewById(R.id.btnLoginID);
@@ -44,12 +55,16 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         etxtEmail = findViewById(R.id.etxtEmailID);
         etxtPassword = findViewById(R.id.etxtPasswordID);
 
-
         btnLogin.setOnClickListener(this);
         btnResetPassword.setOnClickListener(this);
         btnSignup.setOnClickListener(this);
     }
 
+    /**
+     * Authenticates the user with the provided email and password.
+     * If the email or password fields are empty, shows a toast message to inform the user.
+     * Displays a toast message indicating whether the sign-in was successful or if there was an error.
+     */
     private void signIn()
     {
         String email = etxtEmail.getText().toString();
@@ -67,22 +82,32 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             return;
         }
 
+        // Authenticate the user with Firebase
         Task<AuthResult> signInTask = firebaseAuth.signInWithEmailAndPassword(email, password);
 
         signInTask.addOnCompleteListener(task ->
         {
-            if(task.isSuccessful())
+            if (task.isSuccessful())
             {
                 Intent intent = new Intent(LoginActivity.this, SearchPageActivity.class);
                 startActivity(intent);
                 finish();
             }
             else
-                Toast.makeText(LoginActivity.this, "" + task.getException().getMessage(), Toast.LENGTH_LONG).show();
-
+            {
+                // Handle potential NullPointerException from getMessage()
+                String errorMessage = (task.getException() != null) ? task.getException().getMessage() : "Unknown error occurred";
+                Toast.makeText(LoginActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+            }
         });
     }
 
+
+    /**
+     * Sends a password reset email to the specified email address.
+     * If the email field is empty, shows a toast message to inform the user.
+     * Displays a toast message indicating whether the email was sent successfully or if there was an error.
+     */
     private void resetPassword()
     {
         String email = etxtEmail.getText().toString();
@@ -93,24 +118,36 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             return;
         }
 
+        // Send a password reset email
         FirebaseAuth.getInstance().sendPasswordResetEmail(email)
-                .addOnCompleteListener(task -> {
+                .addOnCompleteListener(task ->
+                {
                     if (task.isSuccessful())
+                    {
                         Toast.makeText(LoginActivity.this, "A password reset link has been successfully sent to the provided email address.", Toast.LENGTH_LONG).show();
+                    }
                     else
-                        Toast.makeText(LoginActivity.this, "Error sending reset email: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
-
+                    {
+                        // Handle potential NullPointerException from getMessage()
+                        String errorMessage = (task.getException() != null) ? task.getException().getMessage() : "Unknown error occurred";
+                        Toast.makeText(LoginActivity.this, "Error sending reset email: " + errorMessage, Toast.LENGTH_SHORT).show();
+                    }
                 });
     }
+
 
     @Override
     public void onClick(View v)
     {
-        if(v.getId() == R.id.btnLoginID)
-                signIn();
+        if (v.getId() == R.id.btnLoginID)
+        {
+            signIn();
+        }
 
         if (v.getId() == R.id.btnResetPasswordID)
+        {
             resetPassword();
+        }
 
         if (v.getId() == R.id.btnSignupID)
         {

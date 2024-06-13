@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".SearchPageActivity">
 
-    <!-- Main Content -->
+    <!-- Main Image View for displaying the selected or captured image -->
     <ImageView
         android:id="@+id/imgViewID"
         android:layout_width="380dp"
@@ -15,6 +16,7 @@
         android:layout_marginTop="100dp"
         android:layout_centerHorizontal="true" />
 
+    <!-- Container for the buttons -->
     <LinearLayout
         android:id="@+id/button_container"
         android:layout_width="match_parent"
@@ -26,14 +28,14 @@
         android:paddingStart="16dp"
         android:paddingEnd="16dp">
 
-        <!-- Horizontal Button Container -->
+        <!-- Horizontal container for the first two buttons -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <!-- Upload from Gallery Button -->
+            <!-- Button for uploading an image from the gallery -->
             <Button
                 android:id="@+id/btnUploadGalleryID"
                 android:layout_width="0dp"
@@ -46,7 +48,7 @@
                 android:padding="16dp"
                 android:textSize="16sp" />
 
-            <!-- Take a Picture Button -->
+            <!-- Button for taking a new picture with the camera -->
             <Button
                 android:id="@+id/btnTakePictureID"
                 android:layout_width="0dp"
@@ -60,7 +62,7 @@
                 android:textSize="16sp" />
         </LinearLayout>
 
-        <!-- Search Button -->
+        <!-- Button for initiating the search based on the displayed image -->
         <Button
             android:id="@+id/btnSearchID"
             android:layout_width="match_parent"

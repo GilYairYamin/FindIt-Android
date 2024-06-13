@@ -16,7 +16,6 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.Menu;
@@ -49,11 +48,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 
-public class SearchPageActivity extends AppCompatActivity implements LocationListener, View.OnClickListener {
+public class SearchPageActivity extends AppCompatActivity implements LocationListener, View.OnClickListener
+{
+    // Constants for notification channel and ID
     private static final String CHANNEL_ID = "recognizeImageChannel";
     private static final String CHANNEL_NAME = "Image Recognition Channel";
     private static final int NOTIFICATION_ID = 1;
 
+    // UI elements
     private Button btnUploadGallery, btnTakePicture, btnSearch;
     private ActivityResultLauncher<Intent> cameraLauncher;
     private Bitmap imageBitmap;
@@ -66,72 +68,125 @@ public class SearchPageActivity extends AppCompatActivity implements LocationLis
     private String bestLabel;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search_page);
 
+        // Initialize UI elements and setup listeners
         init();
+
+        // Create notification channel for image recognition results
         createNotificationChannel();
 
+        // Register for camera activity result
         cameraLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                result ->
+                {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null)
+                    {
                         Bundle extras = result.getData().getExtras();
-                        if (extras != null) {
+                        if (extras != null)
+                        {
                             imageBitmap = (Bitmap) extras.get("data");
                             imageView.setImageBitmap(imageBitmap);
                         }
                     }
                 });
 
+        // Register for gallery activity result
         galleryLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                result ->
+                {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null)
+                    {
                         Uri selectedImageUri = result.getData().getData();
-                        if (selectedImageUri != null) {
-                            try {
+                        if (selectedImageUri != null)
+                        {
+                            try
+                            {
                                 InputStream imageStream = getContentResolver().openInputStream(selectedImageUri);
                                 imageBitmap = BitmapFactory.decodeStream(imageStream);
                                 imageView.setImageBitmap(imageBitmap);
-                            } catch (Exception e) {
+                            }
+                            catch (Exception e)
+                            {
                                 Toast.makeText(this, "Failed to load image from gallery: " + e.getMessage(), Toast.LENGTH_LONG).show();
                             }
                         }
                     }
                 });
 
+        // Register for location permission result
         requestPermissionLauncher = registerForActivityResult(
-                new ActivityResultContracts.RequestPermission(), isGranted -> {
-                    if (isGranted) {
+                new ActivityResultContracts.RequestPermission(),
+                isGranted ->
+                {
+                    if (isGranted)
+                    {
                         requestSingleLocationUpdate();
-                    } else {
+                    }
+                    else
+                    {
                         Toast.makeText(this, "Location permission denied.", Toast.LENGTH_LONG).show();
                     }
                 });
 
+        // Register for gallery permission result
         galleryPermissionLauncher = registerForActivityResult(
-                new ActivityResultContracts.RequestPermission(), isGranted -> {
-                    if (isGranted) {
+                new ActivityResultContracts.RequestPermission(),
+                isGranted ->
+                {
+                    if (isGranted)
+                    {
                         openGallery();
-                    } else {
+                    }
+                    else
+                    {
                         Toast.makeText(this, "Gallery permission denied.", Toast.LENGTH_LONG).show();
                     }
                 });
 
+        // Initialize LocationManager for location updates
         locationManager = getSystemService(LocationManager.class);
     }
 
-    private void createNotificationChannel() {
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            NotificationChannel notificationChannel = new NotificationChannel(
-                    CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH);
-            notificationManager.createNotificationChannel(notificationChannel);
+    /**
+     * Initialize UI elements and set up click listeners
+     */
+    private void init()
+    {
+        btnUploadGallery = findViewById(R.id.btnUploadGalleryID);
+        btnTakePicture = findViewById(R.id.btnTakePictureID);
+        btnSearch = findViewById(R.id.btnSearchID);
+        imageView = findViewById(R.id.imgViewID);
 
+        btnUploadGallery.setOnClickListener(this);
+        btnTakePicture.setOnClickListener(this);
+        btnSearch.setOnClickListener(this);
     }
 
-    private void sendNotification(String title, String text) {
+    /**
+     * Create notification channel for image recognition results
+     */
+    private void createNotificationChannel()
+    {
+        NotificationManager notificationManager = getSystemService(NotificationManager.class);
+        NotificationChannel notificationChannel = new NotificationChannel(
+                CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH);
+        notificationManager.createNotificationChannel(notificationChannel);
+    }
+
+    /**
+     * Send a notification with the given title and text
+     *
+     * @param title The title of the notification
+     * @param text The text content of the notification
+     */
+    private void sendNotification(String title, String text)
+    {
         NotificationManager notificationManager = getSystemService(NotificationManager.class);
 
         Intent intent = new Intent(this, SearchPageActivity.class);
@@ -147,24 +202,44 @@ public class SearchPageActivity extends AppCompatActivity implements LocationLis
         notificationManager.notify(NOTIFICATION_ID, notification);
     }
 
-    private void takePictureFromCamera() {
+    /**
+     * Launch camera intent to take a picture
+     */
+    private void takePictureFromCamera()
+    {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         cameraLauncher.launch(takePictureIntent);
     }
 
-    private void openGallery() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+    /**
+     * Open gallery to pick an image
+     */
+    private void openGallery()
+    {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
+        {
             galleryPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE);
-        } else {
+        }
+        else
+        {
             Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             galleryLauncher.launch(intent);
         }
     }
 
-    private void uploadImageToStorage(String name, String location) {
-        new Thread(() -> {
+    /**
+     * Upload image to Firebase Storage with metadata
+     *
+     * @param name The name of the image
+     * @param location The location metadata for the image
+     */
+    private void uploadImageToStorage(String name, String location)
+    {
+        new Thread(() ->
+        {
             FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-            if (user != null) {
+            if (user != null)
+            {
                 Random random = new Random();
                 int id = random.nextInt(1000000000);
 
@@ -187,21 +262,32 @@ public class SearchPageActivity extends AppCompatActivity implements LocationLis
                                 Toast.makeText(SearchPageActivity.this, "Upload image failed! " + e.getMessage(), Toast.LENGTH_LONG).show()))
                         .addOnSuccessListener(taskSnapshot -> runOnUiThread(() ->
                                 Toast.makeText(SearchPageActivity.this, "Upload image success.", Toast.LENGTH_LONG).show()));
-            } else {
+            }
+            else
+            {
                 runOnUiThread(() ->
                         Toast.makeText(SearchPageActivity.this, "User not authenticated", Toast.LENGTH_SHORT).show());
             }
         }).start();
     }
 
-    private void recognizeImage(Runnable onComplete) {
-        new Thread(() -> {
+    /**
+     * Recognize image labels using Firebase ML Kit
+     *
+     * @param onComplete Runnable to execute after recognition is complete
+     */
+    private void recognizeImage(Runnable onComplete)
+    {
+        new Thread(() ->
+        {
             FirebaseVisionImage image = FirebaseVisionImage.fromBitmap(imageBitmap);
             FirebaseVisionImageLabeler labeler = FirebaseVision.getInstance().getOnDeviceImageLabeler();
 
             labeler.processImage(image)
-                    .addOnSuccessListener(firebaseVisionImageLabels -> {
-                        if (firebaseVisionImageLabels.isEmpty()) {
+                    .addOnSuccessListener(firebaseVisionImageLabels ->
+                    {
+                        if (firebaseVisionImageLabels.isEmpty())
+                        {
                             sendNotification("Recognition Result", "No labels found.");
                             onComplete.run();
                             return;
@@ -211,8 +297,10 @@ public class SearchPageActivity extends AppCompatActivity implements LocationLis
                         bestLabel = "Nothing Found";
                         float highestConfidence = 0;
 
-                        for (FirebaseVisionImageLabel label : firebaseVisionImageLabels) {
-                            if (label.getConfidence() > highestConfidence) {
+                        for (FirebaseVisionImageLabel label : firebaseVisionImageLabels)
+                        {
+                            if (label.getConfidence() > highestConfidence)
+                            {
                                 highestConfidence = label.getConfidence();
                                 bestLabel = label.getText();
                             }
@@ -221,71 +309,68 @@ public class SearchPageActivity extends AppCompatActivity implements LocationLis
                         sendNotification("Recognition Result", "Found object: " + bestLabel);
                         onComplete.run();
                     })
-                    .addOnFailureListener(e -> {
+                    .addOnFailureListener(e ->
+                    {
                         sendNotification("Recognition Result", "Failed to get data.");
                         onComplete.run();
                     });
         }).start();
     }
 
-    private void init() {
-        btnUploadGallery = findViewById(R.id.btnUploadGalleryID);
-        btnTakePicture = findViewById(R.id.btnTakePictureID);
-        btnSearch = findViewById(R.id.btnSearchID);
-        imageView = findViewById(R.id.imgViewID);
-
-        btnUploadGallery.setOnClickListener(this);
-        btnTakePicture.setOnClickListener(this);
-        btnSearch.setOnClickListener(this);
-    }
-
-    private void resetPassword() {
-        FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
-
-        FirebaseUser currentUser = firebaseAuth.getCurrentUser();
-        if (currentUser != null)
-            FirebaseAuth.getInstance().sendPasswordResetEmail(currentUser.getEmail())
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful())
-                            Toast.makeText(SearchPageActivity.this, "A password reset link has been successfully sent to the provided email address.", Toast.LENGTH_LONG).show();
-                        else
-                            Toast.makeText(SearchPageActivity.this, "Error sending reset email: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                    });
-    }
-
+    /**
+     * Request a single location update
+     */
     @SuppressLint("MissingPermission")
-    private void requestSingleLocationUpdate() {
-        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+    private void requestSingleLocationUpdate()
+    {
+        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
+        {
             locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, this, null);
-        } else {
+        }
+        else
+        {
             Toast.makeText(this, "GPS Disabled! Uploading with default location.", Toast.LENGTH_LONG).show();
             uploadImageToStorage(bestLabel, "Unknown");
         }
     }
 
-    private boolean isPermissionGranted(String permission) {
+    /**
+     * Check if a specific permission is granted
+     *
+     * @param permission The permission to check
+     * @return true if the permission is granted, false otherwise
+     */
+    private boolean isPermissionGranted(String permission)
+    {
         return ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED;
     }
 
     @Override
-    public void onLocationChanged(Location location) {
+    public void onLocationChanged(Location location)
+    {
         double latitude = location.getLatitude();
         double longitude = location.getLongitude();
         locationString = latitude + ", " + longitude;
 
-        if (Geocoder.isPresent()) {
+        if (Geocoder.isPresent())
+        {
             Geocoder geocoder = new Geocoder(this, Locale.getDefault());
-            try {
+            try
+            {
                 List<Address> addressList = geocoder.getFromLocation(latitude, longitude, 1);
-                if (addressList != null && !addressList.isEmpty()) {
+                if (addressList != null && !addressList.isEmpty())
+                {
                     Address address = addressList.get(0);
                     locationString = address.getAddressLine(0);
                 }
-            } catch (Exception e) {
-                e.printStackTrace(); // Print the stack trace for debugging purposes
+            }
+            catch (Exception e)
+            {
                 Toast.makeText(this, "Failed to get address from location", Toast.LENGTH_SHORT).show();
             }
-        } else {
+        }
+        else
+        {
             Toast.makeText(this, "Geocoder not present", Toast.LENGTH_SHORT).show();
         }
 
@@ -296,85 +381,161 @@ public class SearchPageActivity extends AppCompatActivity implements LocationLis
     }
 
     @Override
-    public void onProviderEnabled(String provider) {
+    public void onProviderEnabled(String provider)
+    {
         Toast.makeText(this, "GPS Enabled!", Toast.LENGTH_LONG).show();
     }
 
     @Override
-    public void onProviderDisabled(String provider) {
+    public void onProviderDisabled(String provider)
+    {
         Toast.makeText(this, "GPS Disabled!", Toast.LENGTH_LONG).show();
     }
 
     @Override
-    public void onClick(View v) {
-        if (v.getId() == R.id.btnSearchID) {
-            if (imageBitmap != null) {
-                recognizeImage(() -> {
-                    if (!isPermissionGranted(Manifest.permission.ACCESS_FINE_LOCATION)) {
+    public void onClick(View v)
+    {
+        if (v.getId() == R.id.btnSearchID)
+        {
+            if (imageBitmap != null)
+            {
+                recognizeImage(() ->
+                {
+                    if (!isPermissionGranted(Manifest.permission.ACCESS_FINE_LOCATION))
+                    {
                         requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
-                    } else {
+                    }
+                    else
+                    {
                         requestSingleLocationUpdate();
                     }
                 });
-            } else {
+            }
+            else
+            {
                 Toast.makeText(SearchPageActivity.this, "No image to search.", Toast.LENGTH_SHORT).show();
             }
         }
 
-        if (v.getId() == R.id.btnTakePictureID) {
+        if (v.getId() == R.id.btnTakePictureID)
+        {
             takePictureFromCamera();
         }
 
-        if (v.getId() == R.id.btnUploadGalleryID) {
+        if (v.getId() == R.id.btnUploadGalleryID)
+        {
             openGallery();
         }
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
+    /**
+     * Sends a password reset email to the currently logged-in user.
+     * If the user is logged in, an email will be sent to the user's email address with a link to reset their password.
+     * Displays a Toast message indicating whether the email was sent successfully or if there was an error.
+     */
+    private void resetPassword()
+    {
+        // Get the instance of FirebaseAuth
+        FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
+
+        // Get the currently logged-in user
+        FirebaseUser currentUser = firebaseAuth.getCurrentUser();
+        if (currentUser != null)
+        {
+            String email = currentUser.getEmail();
+            if (email != null && !email.isEmpty())
+            {
+                // Send a password reset email to the user's email address
+                FirebaseAuth.getInstance().sendPasswordResetEmail(email)
+                        .addOnCompleteListener(task ->
+                        {
+                            if (task.isSuccessful())
+                            {
+                                // Show a success message
+                                Toast.makeText(SearchPageActivity.this, "A password reset link has been successfully sent to the provided email address.", Toast.LENGTH_LONG).show();
+                            }
+                            else
+                            {
+                                // Show an error message
+                                String errorMessage = (task.getException() != null) ? task.getException().getMessage() : "Unknown error occurred";
+                                Toast.makeText(SearchPageActivity.this, "Error sending reset email: " + errorMessage, Toast.LENGTH_SHORT).show();
+                            }
+                        });
+            }
+            else
+            {
+                // Show an error message if the email is null or empty
+                Toast.makeText(SearchPageActivity.this, "User email is not available.", Toast.LENGTH_SHORT).show();
+            }
+        }
+        else
+        {
+            // Show an error message if no user is logged in
+            Toast.makeText(SearchPageActivity.this, "No user is currently logged in.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
         int id = item.getItemId();
 
-        if (id == R.id.action_sign_out) {
+        if (id == R.id.action_sign_out)
+        {
             FirebaseAuth.getInstance().signOut();
             startActivity(new Intent(SearchPageActivity.this, LoginActivity.class));
             finish();
             return true;
         }
 
-        if (id == R.id.action_reset_password) {
+        if (id == R.id.action_reset_password)
+        {
             resetPassword();
             return true;
         }
 
-        if (id == R.id.action_edit_profile) {
+        if (id == R.id.action_edit_profile)
+        {
             startActivity(new Intent(SearchPageActivity.this, ProfilePageActivity.class));
             return true;
         }
 
-        if (id == R.id.action_search_history) {
+        if (id == R.id.action_search_history)
+        {
             startActivity(new Intent(SearchPageActivity.this, HistoryActivity.class));
             return true;
         }
 
-        if (id == R.id.action_enable_location) {
-            if (!isPermissionGranted(Manifest.permission.ACCESS_FINE_LOCATION)) {
+        if (id == R.id.action_enable_location)
+        {
+            if (!isPermissionGranted(Manifest.permission.ACCESS_FINE_LOCATION))
+            {
                 requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
-            } else {
+            }
+            else
+            {
                 Toast.makeText(this, "Location permission already granted", Toast.LENGTH_SHORT).show();
             }
             return true;
         }
 
-        if (id == R.id.action_enable_gallery) {
-            if (!isPermissionGranted(Manifest.permission.READ_EXTERNAL_STORAGE)) {
+        if (id == R.id.action_enable_gallery)
+        {
+            if (!isPermissionGranted(Manifest.permission.READ_EXTERNAL_STORAGE))
+            {
                 galleryPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE);
-            } else {
+            }
+            else
+            {
                 Toast.makeText(this, "Gallery permission already granted", Toast.LENGTH_SHORT).show();
             }
             return true;

@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Root LinearLayout container for each list item in the ListView -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:padding="8dp">
 
+    <!-- ImageView for displaying the image thumbnail -->
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="50dp"
@@ -12,30 +15,34 @@
         android:layout_marginEnd="8dp"
         android:scaleType="centerCrop" />
 
+    <!-- Nested LinearLayout to hold image details (name, location, date) -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:orientation="vertical">
 
+        <!-- TextView for displaying the image name -->
         <TextView
-            android:id="@+id/imageName"
+            android:id="@+id/txtImgNameID"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="16sp"
             android:textStyle="bold"
             android:paddingTop="4dp" />
 
+        <!-- TextView for displaying the image location -->
         <TextView
-            android:id="@+id/imageLocation"
+            android:id="@+id/txtImgLocationID"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="14sp"
             android:paddingTop="2dp"
             android:textColor="@android:color/darker_gray" />
 
+        <!-- TextView for displaying the image date -->
         <TextView
-            android:id="@+id/imageDate"
+            android:id="@+id/txtImgDateID"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="14sp"

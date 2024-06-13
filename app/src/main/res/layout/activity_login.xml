@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -8,8 +9,9 @@
     android:padding="16dp"
     tools:context=".LoginActivity">
 
+    <!-- ImageView for displaying the logo -->
     <ImageView
-        android:id="@+id/logoImageView"
+        android:id="@+id/imgLogoID"
         android:layout_width="400dp"
         android:layout_height="350dp"
         android:src="@drawable/waving_fox"
@@ -17,6 +19,7 @@
         android:layout_marginTop="40dp"
         android:contentDescription="Logo Image" />
 
+    <!-- EditText for entering the email address -->
     <EditText
         android:id="@+id/etxtEmailID"
         android:layout_width="match_parent"
@@ -25,6 +28,7 @@
         android:inputType="textEmailAddress"
         android:layout_marginTop="60dp" />
 
+    <!-- EditText for entering the password -->
     <EditText
         android:id="@+id/etxtPasswordID"
         android:layout_width="match_parent"
@@ -33,12 +37,14 @@
         android:inputType="textPassword"
         android:layout_marginTop="8dp" />
 
+    <!-- LinearLayout for holding the login and sign-up buttons -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_marginTop="16dp">
 
+        <!-- Button for logging in -->
         <Button
             android:id="@+id/btnLoginID"
             android:layout_width="0dp"
@@ -49,6 +55,7 @@
             android:backgroundTint="#D5562E"
             android:textColor="@android:color/white" />
 
+        <!-- Button for signing up -->
         <Button
             android:id="@+id/btnSignupID"
             android:layout_width="0dp"
@@ -61,6 +68,7 @@
             android:layout_marginStart="8dp" />
     </LinearLayout>
 
+    <!-- Button for resetting the password -->
     <Button
         android:id="@+id/btnResetPasswordID"
         android:layout_width="match_parent"
