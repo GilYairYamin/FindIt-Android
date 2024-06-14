@@ -259,9 +259,9 @@ public class SearchPageActivity extends AppCompatActivity implements LocationLis
                 UploadTask uploadTask = storageRef.putBytes(imageBytes, metadata);
 
                 uploadTask.addOnFailureListener(e -> runOnUiThread(() ->
-                                Toast.makeText(SearchPageActivity.this, "Upload image failed! " + e.getMessage(), Toast.LENGTH_LONG).show()))
+                                Toast.makeText(SearchPageActivity.this, "Failed to save image to search history " + e.getMessage(), Toast.LENGTH_LONG).show()))
                         .addOnSuccessListener(taskSnapshot -> runOnUiThread(() ->
-                                Toast.makeText(SearchPageActivity.this, "Upload image success.", Toast.LENGTH_LONG).show()));
+                                Toast.makeText(SearchPageActivity.this, "Image saved to search history.", Toast.LENGTH_LONG).show()));
             }
             else
             {
@@ -288,7 +288,7 @@ public class SearchPageActivity extends AppCompatActivity implements LocationLis
                     {
                         if (firebaseVisionImageLabels.isEmpty())
                         {
-                            sendNotification("Recognition Result", "No labels found.");
+                            sendNotification("FindIt Result", "No labels found.");
                             onComplete.run();
                             return;
                         }
@@ -306,12 +306,14 @@ public class SearchPageActivity extends AppCompatActivity implements LocationLis
                             }
                         }
 
-                        sendNotification("Recognition Result", "Found object: " + bestLabel);
+                        sendNotification("FindIt Result", "Found object: " + bestLabel);
+                        Toast.makeText(this, "Found object: " + bestLabel, Toast.LENGTH_LONG).show();
                         onComplete.run();
                     })
                     .addOnFailureListener(e ->
                     {
-                        sendNotification("Recognition Result", "Failed to get data.");
+                        sendNotification("FindIt Result", "Failed to get data.");
+                        Toast.makeText(this, "Failed to get data.", Toast.LENGTH_LONG).show();
                         onComplete.run();
                     });
         }).start();
