@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Settings"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_gravity="center_horizontal"
+        android:paddingBottom="16dp"/>
+
+    <Switch
+        android:id="@+id/switchNotificationsID"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Enable Notifications"/>
+
+    <Button
+        android:id="@+id/btnEnableGalleryID"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Enable Gallery Permission"
+        android:layout_marginTop="16dp"
+        android:background="#D5562E"
+        android:textColor="@android:color/white"/>
+
+    <Button
+        android:id="@+id/btnEnableLocationID"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Enable Location Permission"
+        android:layout_marginTop="16dp"
+        android:background="#D5562E"
+        android:textColor="@android:color/white"/>
+
+    <Button
+        android:id="@+id/btnSettingsResetPasswordID"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Reset Password"
+        android:layout_marginTop="16dp"
+        android:background="#D5562E"
+        android:textColor="@android:color/white"/>
+
+    <Button
+        android:id="@+id/btnClearHistoryID"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Clear Search History"
+        android:layout_marginTop="16dp"
+        android:background="#D5562E"
+        android:textColor="@android:color/white"/>
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <Button
+        android:id="@+id/btnSettingsReturnID"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Return"
+        android:layout_marginTop="16dp"
+        android:layout_gravity="center_horizontal"
+        android:background="#D5562E"
+        android:textColor="@android:color/white"/>
+
+</LinearLayout>

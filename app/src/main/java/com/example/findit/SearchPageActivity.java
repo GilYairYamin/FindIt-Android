@@ -2,11 +2,13 @@ package com.example.findit;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -180,26 +182,40 @@ public class SearchPageActivity extends AppCompatActivity implements LocationLis
     }
 
     /**
-     * Send a notification with the given title and text
+     * Check if notifications are enabled
+     *
+     * @return true if notifications are enabled, false otherwise
+     */
+    private boolean areNotificationsEnabled()
+    {
+        SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
+        return prefs.getBoolean("notifications_enabled", true);
+    }
+
+    /**
+     * Send a notification with the given title and text if notifications are enabled
      *
      * @param title The title of the notification
      * @param text The text content of the notification
      */
     private void sendNotification(String title, String text)
     {
-        NotificationManager notificationManager = getSystemService(NotificationManager.class);
+        if (areNotificationsEnabled())
+        {
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
 
-        Intent intent = new Intent(this, SearchPageActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+            Intent intent = new Intent(this, SearchPageActivity.class);
+            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.notification_icon)
-                .setContentTitle(title)
-                .setContentText(text)
-                .setContentIntent(pendingIntent)
-                .build();
+            Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+                    .setSmallIcon(R.drawable.notification_icon)
+                    .setContentTitle(title)
+                    .setContentText(text)
+                    .setContentIntent(pendingIntent)
+                    .build();
 
-        notificationManager.notify(NOTIFICATION_ID, notification);
+            notificationManager.notify(NOTIFICATION_ID, notification);
+        }
     }
 
     /**
@@ -430,61 +446,40 @@ public class SearchPageActivity extends AppCompatActivity implements LocationLis
         }
     }
 
+    /**
+     * Show an exit confirmation dialog
+     */
+    private void showExitConfirmationDialog()
+    {
+        new AlertDialog.Builder(this)
+                .setTitle("Exit")
+                .setMessage("Are you sure you want to exit?")
+                .setPositiveButton("Yes", (dialog, which) -> finish())
+                .setNegativeButton("No", null)
+                .show();
+    }
+
+    /**
+     * Show an about dialog
+     */
+    private void showAboutDialog()
+    {
+        new AlertDialog.Builder(this)
+                .setTitle("About FindIt")
+                .setMessage(
+                        "Creators: Omri Naor, Gil Yair Yamin, Netanel Birhauz\n\n" +
+                        "OS: Android 11 (R) API Level 30\n\n" +
+                        "Date: 21/07/2024")
+                .setPositiveButton("OK", null)
+                .show();
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
-
-    /**
-     * Sends a password reset email to the currently logged-in user.
-     * If the user is logged in, an email will be sent to the user's email address with a link to reset their password.
-     * Displays a Toast message indicating whether the email was sent successfully or if there was an error.
-     */
-    private void resetPassword()
-    {
-        // Get the instance of FirebaseAuth
-        FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
-
-        // Get the currently logged-in user
-        FirebaseUser currentUser = firebaseAuth.getCurrentUser();
-        if (currentUser != null)
-        {
-            String email = currentUser.getEmail();
-            if (email != null && !email.isEmpty())
-            {
-                // Send a password reset email to the user's email address
-                FirebaseAuth.getInstance().sendPasswordResetEmail(email)
-                        .addOnCompleteListener(task ->
-                        {
-                            if (task.isSuccessful())
-                            {
-                                // Show a success message
-                                Toast.makeText(SearchPageActivity.this, "A password reset link has been successfully sent to the provided email address.", Toast.LENGTH_LONG).show();
-                            }
-                            else
-                            {
-                                // Show an error message
-                                String errorMessage = (task.getException() != null) ? task.getException().getMessage() : "Unknown error occurred";
-                                Toast.makeText(SearchPageActivity.this, "Error sending reset email: " + errorMessage, Toast.LENGTH_SHORT).show();
-                            }
-                        });
-            }
-            else
-            {
-                // Show an error message if the email is null or empty
-                Toast.makeText(SearchPageActivity.this, "User email is not available.", Toast.LENGTH_SHORT).show();
-            }
-        }
-        else
-        {
-            // Show an error message if no user is logged in
-            Toast.makeText(SearchPageActivity.this, "No user is currently logged in.", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
@@ -496,12 +491,6 @@ public class SearchPageActivity extends AppCompatActivity implements LocationLis
             FirebaseAuth.getInstance().signOut();
             startActivity(new Intent(SearchPageActivity.this, LoginActivity.class));
             finish();
-            return true;
-        }
-
-        if (id == R.id.action_reset_password)
-        {
-            resetPassword();
             return true;
         }
 
@@ -517,29 +506,21 @@ public class SearchPageActivity extends AppCompatActivity implements LocationLis
             return true;
         }
 
-        if (id == R.id.action_enable_location)
+        if (id == R.id.action_settings)
         {
-            if (!isPermissionGranted(Manifest.permission.ACCESS_FINE_LOCATION))
-            {
-                requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
-            }
-            else
-            {
-                Toast.makeText(this, "Location permission already granted", Toast.LENGTH_SHORT).show();
-            }
+            startActivity(new Intent(SearchPageActivity.this, SettingsActivity.class));
             return true;
         }
 
-        if (id == R.id.action_enable_gallery)
+        if (id == R.id.action_about)
         {
-            if (!isPermissionGranted(Manifest.permission.READ_EXTERNAL_STORAGE))
-            {
-                galleryPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE);
-            }
-            else
-            {
-                Toast.makeText(this, "Gallery permission already granted", Toast.LENGTH_SHORT).show();
-            }
+            showAboutDialog();
+            return true;
+        }
+
+        if (id == R.id.action_exit)
+        {
+            showExitConfirmationDialog();
             return true;
         }
 

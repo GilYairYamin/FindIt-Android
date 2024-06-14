@@ -40,6 +40,12 @@
         <activity
             android:name=".SearchPageActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".SettingsActivity"
+            android:theme="@style/Theme.FindIt.NoActionBar"
+            android:exported="false" />
+
         <activity
             android:name=".MainActivity"
             android:theme="@style/Theme.FindIt.NoActionBar"

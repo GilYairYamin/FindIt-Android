@@ -1,23 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item
-        android:id="@+id/action_sign_out"
-        android:title="Sign Out"
-        android:orderInCategory="100"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_reset_password"
-        android:title="Reset Password"
-        android:orderInCategory="100"
-        app:showAsAction="never" />
 
     <item
         android:id="@+id/action_edit_profile"
         android:title="Edit Profile"
         android:orderInCategory="100"
         app:showAsAction="never" />
-
     <item
         android:id="@+id/action_search_history"
         android:title="Search History"
@@ -25,14 +13,26 @@
         app:showAsAction="never" />
 
     <item
-        android:id="@+id/action_enable_location"
-        android:title="Enable Location Permission"
+        android:id="@+id/action_settings"
+        android:title="Settings"
         android:orderInCategory="100"
         app:showAsAction="never" />
 
     <item
-        android:id="@+id/action_enable_gallery"
-        android:title="Enable Gallery Permission"
+        android:id="@+id/action_about"
+        android:title="About"
+        android:orderInCategory="100"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_sign_out"
+        android:title="Sign Out"
+        android:orderInCategory="100"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_exit"
+        android:title="Exit"
         android:orderInCategory="100"
         app:showAsAction="never" />
 </menu>

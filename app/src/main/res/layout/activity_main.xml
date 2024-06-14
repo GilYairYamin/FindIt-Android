@@ -10,23 +10,36 @@
     android:gravity="center"
     tools:context=".MainActivity">
 
+    <!-- TextView for displaying the names and IDs -->
+    <TextView
+        android:id="@+id/txtAuthors"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:padding="16dp"
+        android:text="Omri Naor - 208306068\nGil Yair Yamin - 207027053\nNetanel Birhauz - 311227888\n\nDate: 21/07/2024"
+        android:textColor="@android:color/black"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
     <!-- ImageView for displaying the main icon of the app -->
     <ImageView
         android:id="@+id/imageView7"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        app:srcCompat="@drawable/findit_icon" />
+        app:srcCompat="@drawable/findit_icon"
+        android:layout_marginBottom="100dp"/>
+
 
     <!-- ImageView for displaying a secondary icon of a fox -->
     <ImageView
         android:id="@+id/imgFoxIcon"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_gravity="center"
-        android:layout_marginBottom="100dp"
+        android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:foregroundGravity="center"
+        android:layout_gravity="center"
+        android:layout_marginBottom="50dp"
         app:srcCompat="@drawable/fox_icon" />
 
 </LinearLayout>
