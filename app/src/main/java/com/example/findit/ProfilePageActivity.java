@@ -295,7 +295,7 @@ public class ProfilePageActivity extends AppCompatActivity implements View.OnCli
             FirebaseUser currentUser = firebaseAuth.getCurrentUser();
             if (currentUser != null)
             {
-                startActivity(new Intent(ProfilePageActivity.this, SearchPageActivity.class));
+                startActivity(new Intent(ProfilePageActivity.this, SettingsActivity.class));
             }
             else
             {

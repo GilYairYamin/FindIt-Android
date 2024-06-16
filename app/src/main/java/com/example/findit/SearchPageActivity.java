@@ -494,12 +494,6 @@ public class SearchPageActivity extends AppCompatActivity implements LocationLis
             return true;
         }
 
-        if (id == R.id.action_edit_profile)
-        {
-            startActivity(new Intent(SearchPageActivity.this, ProfilePageActivity.class));
-            return true;
-        }
-
         if (id == R.id.action_search_history)
         {
             startActivity(new Intent(SearchPageActivity.this, HistoryActivity.class));

@@ -1,7 +1,9 @@
 package com.example.findit;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -9,7 +11,6 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
@@ -102,39 +103,57 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         });
     }
 
-
     /**
-     * Sends a password reset email to the specified email address.
+     * Displays an AlertDialog for resetting the password.
      * If the email field is empty, shows a toast message to inform the user.
+     * Sends a password reset email to the specified email address.
      * Displays a toast message indicating whether the email was sent successfully or if there was an error.
      */
-    private void resetPassword()
+    private void showResetPasswordDialog()
     {
-        String email = etxtEmail.getText().toString();
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = this.getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.reset_password, null);
+        builder.setView(dialogView);
 
-        if (email.isEmpty())
-        {
-            Toast.makeText(LoginActivity.this, "To reset your password, please enter your email address and try again.", Toast.LENGTH_LONG).show();
-            return;
-        }
+        EditText dialogEmailEditText = dialogView.findViewById(R.id.emailEditTextID);
+        Button dialogResetPasswordButton = dialogView.findViewById(R.id.resetPasswordButtonID);
 
-        // Send a password reset email
-        FirebaseAuth.getInstance().sendPasswordResetEmail(email)
-                .addOnCompleteListener(task ->
-                {
-                    if (task.isSuccessful())
+        dialogResetPasswordButton.setOnClickListener(v -> {
+            String email = dialogEmailEditText.getText().toString();
+
+            if (email.isEmpty())
+            {
+                Toast.makeText(LoginActivity.this, "To reset your password, please enter your email address and try again.", Toast.LENGTH_LONG).show();
+                return;
+            }
+
+            // Send a password reset email
+            FirebaseAuth.getInstance().sendPasswordResetEmail(email)
+                    .addOnCompleteListener(task ->
                     {
-                        Toast.makeText(LoginActivity.this, "A password reset link has been successfully sent to the provided email address.", Toast.LENGTH_LONG).show();
-                    }
-                    else
-                    {
-                        // Handle potential NullPointerException from getMessage()
-                        String errorMessage = (task.getException() != null) ? task.getException().getMessage() : "Unknown error occurred";
-                        Toast.makeText(LoginActivity.this, "Error sending reset email: " + errorMessage, Toast.LENGTH_SHORT).show();
-                    }
-                });
+                        if (task.isSuccessful())
+                        {
+                            Toast.makeText(LoginActivity.this, "A password reset link has been successfully sent to the provided email address.", Toast.LENGTH_LONG).show();
+                        }
+                        else
+                        {
+                            // Handle potential NullPointerException from getMessage()
+                            String errorMessage = (task.getException() != null) ? task.getException().getMessage() : "Unknown error occurred";
+                            Toast.makeText(LoginActivity.this, "Error sending reset email: " + errorMessage, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+        });
+
+        builder.setPositiveButton("OK", (dialog, id) -> dialog.dismiss());
+        builder.setNegativeButton("Cancel", (dialog, id) -> dialog.dismiss());
+
+
+        AlertDialog dialog = builder.create();
+
+
+        dialog.show();
     }
-
 
     @Override
     public void onClick(View v)
@@ -146,7 +165,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         if (v.getId() == R.id.btnResetPasswordID)
         {
-            resetPassword();
+            showResetPasswordDialog();
         }
 
         if (v.getId() == R.id.btnSignupID)

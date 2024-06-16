@@ -21,19 +21,28 @@
         android:text="Enable Notifications"/>
 
     <Button
-        android:id="@+id/btnEnableGalleryID"
+        android:id="@+id/btnEnablePermissionsID"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Enable Gallery Permission"
+        android:text="Enable Gallery/Location Permission"
         android:layout_marginTop="16dp"
         android:background="#D5562E"
         android:textColor="@android:color/white"/>
 
     <Button
-        android:id="@+id/btnEnableLocationID"
+        android:id="@+id/btnEditProfileID"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Enable Location Permission"
+        android:text="Edit Profile"
+        android:layout_marginTop="16dp"
+        android:background="#D5562E"
+        android:textColor="@android:color/white"/>
+
+    <Button
+        android:id="@+id/btnClearHistoryID"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Clear Search History"
         android:layout_marginTop="16dp"
         android:background="#D5562E"
         android:textColor="@android:color/white"/>
@@ -47,14 +56,6 @@
         android:background="#D5562E"
         android:textColor="@android:color/white"/>
 
-    <Button
-        android:id="@+id/btnClearHistoryID"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Clear Search History"
-        android:layout_marginTop="16dp"
-        android:background="#D5562E"
-        android:textColor="@android:color/white"/>
 
     <Space
         android:layout_width="match_parent"

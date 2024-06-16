@@ -1,9 +1,11 @@
 package com.example.findit;
 
-import android.Manifest;
+import android.app.AlertDialog;
+import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -13,7 +15,6 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -24,14 +25,13 @@ public class SettingsActivity extends AppCompatActivity implements CompoundButto
 {
 
     private Switch switchNotifications;
-    private Button btnEnableGallery;
-    private Button btnEnableLocation;
+    private Button btnEnablePermissions;
     private Button btnResetPassword;
     private Button btnClearHistory;
     private Button btnReturn;
 
-    private ActivityResultLauncher<String> galleryPermissionLauncher;
-    private ActivityResultLauncher<String> locationPermissionLauncher;
+    private Button btnEditProfile;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -48,20 +48,12 @@ public class SettingsActivity extends AppCompatActivity implements CompoundButto
     {
         // Initialize UI elements
         switchNotifications = findViewById(R.id.switchNotificationsID);
-        btnEnableGallery = findViewById(R.id.btnEnableGalleryID);
-        btnEnableLocation = findViewById(R.id.btnEnableLocationID);
+        btnEnablePermissions = findViewById(R.id.btnEnablePermissionsID);
         btnResetPassword = findViewById(R.id.btnSettingsResetPasswordID);
         btnClearHistory = findViewById(R.id.btnClearHistoryID);
         btnReturn = findViewById(R.id.btnSettingsReturnID);
+        btnEditProfile = findViewById(R.id.btnEditProfileID);
 
-        // Initialize permission launchers
-        galleryPermissionLauncher = registerForActivityResult(
-                new ActivityResultContracts.RequestPermission(),
-                this::onGalleryPermissionResult);
-
-        locationPermissionLauncher = registerForActivityResult(
-                new ActivityResultContracts.RequestPermission(),
-                this::onLocationPermissionResult);
 
         // Load current notification preference
         SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
@@ -70,11 +62,11 @@ public class SettingsActivity extends AppCompatActivity implements CompoundButto
 
         // Set listeners
         switchNotifications.setOnCheckedChangeListener(this);
-        btnEnableGallery.setOnClickListener(this);
-        btnEnableLocation.setOnClickListener(this);
+        btnEnablePermissions.setOnClickListener(this);
         btnResetPassword.setOnClickListener(this);
         btnClearHistory.setOnClickListener(this);
         btnReturn.setOnClickListener(this);
+        btnEditProfile.setOnClickListener(this);
     }
 
     @Override
@@ -90,18 +82,22 @@ public class SettingsActivity extends AppCompatActivity implements CompoundButto
         }
     }
 
+
+    private void showClearHistoryDialog()
+    {
+        new AlertDialog.Builder(this)
+                .setMessage("Are you sure you want to clear your search history?")
+                .setPositiveButton("Clear History", (dialog, which) -> clearSearchHistory())
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
     @Override
     public void onClick(View v)
     {
-        if (v.getId() == R.id.btnEnableGalleryID)
+        if (v.getId() == R.id.btnEnablePermissionsID)
         {
-            enableGalleryPermission();
-            return;
-        }
-
-        if (v.getId() == R.id.btnEnableLocationID)
-        {
-            enableLocationPermission();
+            enablePermissions();
             return;
         }
 
@@ -113,80 +109,35 @@ public class SettingsActivity extends AppCompatActivity implements CompoundButto
 
         if (v.getId() == R.id.btnClearHistoryID)
         {
-            clearSearchHistory();
+            showClearHistoryDialog();
+            return;
+        }
+
+        if (v.getId() == R.id.btnEditProfileID)
+        {
+            startActivity(new Intent(SettingsActivity.this, ProfilePageActivity.class));
             return;
         }
 
         if (v.getId() == R.id.btnSettingsReturnID)
         {
-            finish();
+            startActivity(new Intent(SettingsActivity.this, SearchPageActivity.class));
             return;
         }
     }
 
     /**
-     * Enable gallery permission by requesting the required permission from the user
+     * Direct the user to the app settings in order to enable permissions
      */
-    private void enableGalleryPermission()
+    private void enablePermissions()
     {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
-        {
-            galleryPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE);
-        }
-        else
-        {
-            Toast.makeText(SettingsActivity.this, "Gallery permission already granted.", Toast.LENGTH_SHORT).show();
-        }
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        Uri uri = Uri.fromParts("package", getPackageName(), null);
+        intent.setData(uri);
+        startActivity(intent);
     }
 
-    /**
-     * Enable location permission by requesting the required permission from the user
-     */
-    private void enableLocationPermission()
-    {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-        {
-            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
-        }
-        else
-        {
-            Toast.makeText(SettingsActivity.this, "Location permission already granted.", Toast.LENGTH_SHORT).show();
-        }
-    }
 
-    /**
-     * Handle the result of the gallery permission request
-     *
-     * @param isGranted true if the permission is granted, false otherwise
-     */
-    private void onGalleryPermissionResult(boolean isGranted)
-    {
-        if (isGranted)
-        {
-            Toast.makeText(SettingsActivity.this, "Gallery permission granted.", Toast.LENGTH_SHORT).show();
-        }
-        else
-        {
-            Toast.makeText(SettingsActivity.this, "Gallery permission denied.", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    /**
-     * Handle the result of the location permission request
-     *
-     * @param isGranted true if the permission is granted, false otherwise
-     */
-    private void onLocationPermissionResult(boolean isGranted)
-    {
-        if (isGranted)
-        {
-            Toast.makeText(SettingsActivity.this, "Location permission granted.", Toast.LENGTH_SHORT).show();
-        }
-        else
-        {
-            Toast.makeText(SettingsActivity.this, "Location permission denied.", Toast.LENGTH_SHORT).show();
-        }
-    }
 
     /**
      * Send a password reset email to the currently logged-in user
@@ -239,15 +190,9 @@ public class SettingsActivity extends AppCompatActivity implements CompoundButto
                 userImagesRef.listAll().addOnSuccessListener(listResult -> {
                     for (StorageReference item : listResult.getItems())
                     {
-                        item.delete().addOnSuccessListener(aVoid -> {
-                            Toast.makeText(SettingsActivity.this, "Search history cleared.", Toast.LENGTH_SHORT).show();
-                        }).addOnFailureListener(e -> {
-                            Toast.makeText(SettingsActivity.this, "Failed to delete image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                        });
+                        item.delete().addOnSuccessListener(aVoid -> Toast.makeText(SettingsActivity.this, "Search history cleared.", Toast.LENGTH_SHORT).show()).addOnFailureListener(e -> Toast.makeText(SettingsActivity.this, "Failed to delete image: " + e.getMessage(), Toast.LENGTH_SHORT).show());
                     }
-                }).addOnFailureListener(e -> {
-                    Toast.makeText(SettingsActivity.this, "Failed to list images: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
+                }).addOnFailureListener(e -> Toast.makeText(SettingsActivity.this, "Failed to list images: " + e.getMessage(), Toast.LENGTH_SHORT).show());
             }
         }
         else
