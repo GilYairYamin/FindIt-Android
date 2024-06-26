@@ -2,7 +2,9 @@ package com.example.findit;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
@@ -35,6 +37,9 @@ public class SearchPageActivity extends AppCompatActivity implements View.OnClic
     private ImageView imageView;
     private ActivityResultLauncher<Intent> galleryLauncher;
     private ActivityResultLauncher<String> galleryPermissionLauncher;
+    private ActivityResultLauncher<String> locationPermissionLauncher;
+    private static final String PREFS_NAME = "FindItPrefs";
+    private static final String KEY_PERMISSION_DIALOG_SHOWN = "locationPermissionDialogShown";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,7 +87,18 @@ public class SearchPageActivity extends AppCompatActivity implements View.OnClic
                     if (isGranted) {
                         openGallery();
                     } else {
-                        Toast.makeText(this, "Gallery permission denied.", Toast.LENGTH_LONG).show();
+                        Toast.makeText(this, "Gallery permission denied.", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+        // Register for location permission result
+        locationPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                isGranted -> {
+                    if (isGranted) {
+                        handleSearch();
+                    } else {
+                        Toast.makeText(this, "Location permission denied.", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
@@ -112,18 +128,35 @@ public class SearchPageActivity extends AppCompatActivity implements View.OnClic
         cameraLauncher.launch(takePictureIntent);
     }
 
+    /**
+     * Shows a dialog explaining why the location permission is needed, and then requests the permission.
+     */
+    private void showLocationPermissionDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Location permission needed")
+                .setMessage("This app requires location permission to save the captured image location in the search history.\n\n" +
+                        "Please allow location permission.")
+                .setPositiveButton("OK", (dialog, which) -> locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION))
+                .show();
+    }
+
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.btnSearchID) {
-            if (imageBitmap != null) {
-                Intent serviceIntent = new Intent(this, LabelHandlerService.class);
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                imageBitmap.compress(CompressFormat.JPEG, 100, stream);
-                byte[] byteArray = stream.toByteArray();
-                serviceIntent.putExtra(LabelHandlerService.EXTRA_IMAGE, byteArray);
-                startService(serviceIntent);
+            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            boolean dialogShown = prefs.getBoolean(KEY_PERMISSION_DIALOG_SHOWN, false);
+
+            if (!dialogShown) {
+                // Show the dialog and request permission
+                showLocationPermissionDialog();
+                prefs.edit().putBoolean(KEY_PERMISSION_DIALOG_SHOWN, true).apply();
             } else {
-                Toast.makeText(SearchPageActivity.this, "No image to search.", Toast.LENGTH_SHORT).show();
+                // Check if permission is granted
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
+                } else {
+                    handleSearch();
+                }
             }
         }
 
@@ -133,6 +166,22 @@ public class SearchPageActivity extends AppCompatActivity implements View.OnClic
 
         if (v.getId() == R.id.btnUploadGalleryID) {
             openGallery();
+        }
+    }
+
+    /**
+     * Handles the search operation by starting the LabelHandlerService with the image data.
+     */
+    private void handleSearch() {
+        if (imageBitmap != null) {
+            Intent serviceIntent = new Intent(this, LabelHandlerService.class);
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            imageBitmap.compress(CompressFormat.JPEG, 100, stream);
+            byte[] byteArray = stream.toByteArray();
+            serviceIntent.putExtra(LabelHandlerService.EXTRA_IMAGE, byteArray);
+            startService(serviceIntent);
+        } else {
+            Toast.makeText(SearchPageActivity.this, "No image to search.", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -176,6 +225,9 @@ public class SearchPageActivity extends AppCompatActivity implements View.OnClic
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * Shows a dialog to confirm if the user wants to exit the app.
+     */
     private void showExitConfirmationDialog() {
         new AlertDialog.Builder(this)
                 .setTitle("Exit")
@@ -185,6 +237,9 @@ public class SearchPageActivity extends AppCompatActivity implements View.OnClic
                 .show();
     }
 
+    /**
+     * Shows a dialog with information about the app.
+     */
     private void showAboutDialog() {
         new AlertDialog.Builder(this)
                 .setTitle("About FindIt")
