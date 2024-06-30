@@ -141,7 +141,7 @@ public class ProfilePageActivity extends AppCompatActivity implements View.OnCli
                         }).addOnFailureListener(e ->
                         {
                             // Handle any errors
-                            Toast.makeText(this, "Failed to load profile picture.", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, "Profile picture wasn't found.", Toast.LENGTH_SHORT).show();
                         });
                     }
                     else
@@ -308,6 +308,7 @@ public class ProfilePageActivity extends AppCompatActivity implements View.OnCli
         if (v.getId() == R.id.btnSaveRegisterID)
         {
             createUser();
+
         }
 
         if (v.getId() == R.id.imgProfilePicID)
