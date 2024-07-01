@@ -2,13 +2,12 @@ package com.example.findit;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.Bitmap.CompressFormat;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -19,6 +18,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
@@ -27,12 +27,12 @@ import androidx.core.content.ContextCompat;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
+import java.io.IOException;
 
 public class SearchPageActivity extends AppCompatActivity implements View.OnClickListener {
     // UI elements
     private Button btnUploadGallery, btnTakePicture, btnSearch;
-    private ActivityResultLauncher<Intent> cameraLauncher;
+    private ActivityResultLauncher<Uri> cameraLauncher;
     private Bitmap imageBitmap;
     private ImageView imageView;
     private ActivityResultLauncher<Intent> galleryLauncher;
@@ -40,6 +40,7 @@ public class SearchPageActivity extends AppCompatActivity implements View.OnClic
     private ActivityResultLauncher<String> locationPermissionLauncher;
     private static final String PREFS_NAME = "FindItPrefs";
     private static final String KEY_PERMISSION_DIALOG_SHOWN = "locationPermissionDialogShown";
+    private Uri imageUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,63 +48,17 @@ public class SearchPageActivity extends AppCompatActivity implements View.OnClic
         setContentView(R.layout.activity_search_page);
 
         // Initialize UI elements and setup listeners
-        init();
+        initUIElements();
 
-        // Register for camera activity result
-        cameraLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                        Bundle extras = result.getData().getExtras();
-                        if (extras != null) {
-                            imageBitmap = (Bitmap) extras.get("data");
-                            imageView.setImageBitmap(imageBitmap);
-                        }
-                    }
-                });
-
-        // Register for gallery activity result
-        galleryLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                        Uri selectedImageUri = result.getData().getData();
-                        if (selectedImageUri != null) {
-                            try {
-                                InputStream imageStream = getContentResolver().openInputStream(selectedImageUri);
-                                imageBitmap = BitmapFactory.decodeStream(imageStream);
-                                imageView.setImageBitmap(imageBitmap);
-                            } catch (Exception e) {
-                                Toast.makeText(this, "Failed to load image from gallery: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                            }
-                        }
-                    }
-                });
-
-        // Register for gallery permission result
-        galleryPermissionLauncher = registerForActivityResult(
-                new ActivityResultContracts.RequestPermission(),
-                isGranted -> {
-                    if (isGranted) {
-                        openGallery();
-                    } else {
-                        Toast.makeText(this, "Gallery permission denied.", Toast.LENGTH_SHORT).show();
-                    }
-                });
-
-        // Register for location permission result
-        locationPermissionLauncher = registerForActivityResult(
-                new ActivityResultContracts.RequestPermission(),
-                isGranted -> {
-                    if (isGranted) {
-                        handleSearch();
-                    } else {
-                        Toast.makeText(this, "Location permission denied.", Toast.LENGTH_SHORT).show();
-                    }
-                });
+        // Register for activity results
+        registerActivityResults();
     }
 
-    private void init() {
+    /**
+     * Initialize UI elements and set up click listeners
+     */
+    private void initUIElements()
+    {
         btnUploadGallery = findViewById(R.id.btnUploadGalleryID);
         btnTakePicture = findViewById(R.id.btnTakePictureID);
         btnSearch = findViewById(R.id.btnSearchID);
@@ -114,24 +69,175 @@ public class SearchPageActivity extends AppCompatActivity implements View.OnClic
         btnSearch.setOnClickListener(this);
     }
 
-    private void openGallery() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+    /**
+     * Register for activity results for camera, gallery, and permissions
+     */
+    private void registerActivityResults()
+    {
+        // Register for camera activity result
+        cameraLauncher = registerForActivityResult(
+                new ActivityResultContracts.TakePicture(),
+                isSuccess -> handleCameraResult(isSuccess));
+
+        // Register for gallery activity result
+        galleryLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> handleGalleryResult(result));
+
+        // Register for gallery permission result
+        galleryPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                isGranted -> handleGalleryPermissionResult(isGranted));
+
+        // Register for location permission result
+        locationPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                this::handleLocationPermissionResult);
+    }
+
+    /**
+     * Handle the result of the camera activity
+     *
+     * @param isSuccess true if the image was successfully captured, false otherwise
+     */
+    private void handleCameraResult(boolean isSuccess)
+    {
+        if (isSuccess)
+        {
+            try
+            {
+                imageBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
+                imageView.setImageBitmap(imageBitmap);
+
+                SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+                boolean savePicturesEnabled = prefs.getBoolean("save_pictures_enabled", true);
+
+                if (!savePicturesEnabled)
+                    // Delete the image from the gallery if the user chose not to save it
+                    getContentResolver().delete(imageUri, null, null);
+            }
+
+            catch (IOException e)
+            {
+                Toast.makeText(this, "Failed to process the captured image: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    /**
+     * Handle the result of the gallery activity
+     *
+     * @param result The result from the gallery activity
+     */
+    private void handleGalleryResult(ActivityResult result)
+    {
+        if (result.getResultCode() == RESULT_OK && result.getData() != null)
+        {
+            Uri selectedImageUri = result.getData().getData();
+            if (selectedImageUri != null)
+            {
+                try
+                {
+                    imageBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), selectedImageUri);
+                    imageView.setImageBitmap(imageBitmap);
+                }
+
+                catch (IOException e)
+                {
+                    Toast.makeText(this, "Failed to load image from gallery: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+    }
+
+    /**
+     * Handle the result of the gallery permission request
+     *
+     * @param isGranted true if the permission was granted, false otherwise
+     */
+    private void handleGalleryPermissionResult(boolean isGranted)
+    {
+        if (isGranted)
+            openGallery();
+        else
+            Toast.makeText(this, "Gallery permission denied.", Toast.LENGTH_SHORT).show();
+    }
+
+    /**
+     * Handle the result of the location permission request
+     *
+     * @param isGranted true if the permission was granted, false otherwise
+     */
+    private void handleLocationPermissionResult(boolean isGranted)
+    {
+        if (isGranted)
+            Toast.makeText(this, "Location permission granted.", Toast.LENGTH_SHORT).show();
+        else
+            Toast.makeText(this, "Location permission denied. Continuing without location.", Toast.LENGTH_SHORT).show();
+    }
+
+    /**
+     * Open the gallery to select an image
+     */
+    private void openGallery()
+    {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
             galleryPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE);
-        } else {
+        else
+        {
             Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             galleryLauncher.launch(intent);
         }
     }
 
-    private void takePictureFromCamera() {
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        cameraLauncher.launch(takePictureIntent);
+    /**
+     * Capture an image using the camera and save it to the gallery
+     */
+    private void takePictureFromCamera()
+    {
+        // Create an empty ContentValues object
+        ContentValues values = new ContentValues();
+        // Insert the new content into the MediaStore and get the URI
+        imageUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+
+        if (imageUri != null)
+            cameraLauncher.launch(imageUri);
+    }
+
+    @Override
+    public void onClick(View v)
+    {
+        if (v.getId() == R.id.btnSearchID)
+            handleSearchButtonClick();
+        else if (v.getId() == R.id.btnTakePictureID)
+            takePictureFromCamera();
+        else if (v.getId() == R.id.btnUploadGalleryID)
+            openGallery();
     }
 
     /**
-     * Shows a dialog explaining why the location permission is needed, and then requests the permission.
+     * Handle the search button click event
      */
-    private void showLocationPermissionDialog() {
+    private void handleSearchButtonClick()
+    {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        boolean dialogShown = prefs.getBoolean(KEY_PERMISSION_DIALOG_SHOWN, false);
+
+        if (!dialogShown)
+        {
+            // Show the dialog and request permission
+            showLocationPermissionDialog();
+            prefs.edit().putBoolean(KEY_PERMISSION_DIALOG_SHOWN, true).apply();
+        }
+        else
+            handleSearch();
+    }
+
+    /**
+     * Show a dialog explaining why location permission is needed and request the permission
+     */
+    private void showLocationPermissionDialog()
+    {
         new AlertDialog.Builder(this)
                 .setTitle("Location permission needed")
                 .setMessage("This app requires location permission to save the captured image location in the search history.\n\n" +
@@ -140,84 +246,62 @@ public class SearchPageActivity extends AppCompatActivity implements View.OnClic
                 .show();
     }
 
-    @Override
-    public void onClick(View v) {
-        if (v.getId() == R.id.btnSearchID) {
-            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-            boolean dialogShown = prefs.getBoolean(KEY_PERMISSION_DIALOG_SHOWN, false);
-
-            if (!dialogShown) {
-                // Show the dialog and request permission
-                showLocationPermissionDialog();
-                prefs.edit().putBoolean(KEY_PERMISSION_DIALOG_SHOWN, true).apply();
-            } else {
-                // Check if permission is granted
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
-                } else {
-                    handleSearch();
-                }
-            }
-        }
-
-        if (v.getId() == R.id.btnTakePictureID) {
-            takePictureFromCamera();
-        }
-
-        if (v.getId() == R.id.btnUploadGalleryID) {
-            openGallery();
-        }
-    }
-
     /**
-     * Handles the search operation by starting the LabelHandlerService with the image data.
+     * Handle the search operation by starting the LabelHandlerService with the image data
      */
-    private void handleSearch() {
-        if (imageBitmap != null) {
+    private void handleSearch()
+    {
+        if (imageBitmap != null)
+        {
             Intent serviceIntent = new Intent(this, LabelHandlerService.class);
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            imageBitmap.compress(CompressFormat.JPEG, 100, stream);
+            imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
             byte[] byteArray = stream.toByteArray();
             serviceIntent.putExtra(LabelHandlerService.EXTRA_IMAGE, byteArray);
             startService(serviceIntent);
-        } else {
-            Toast.makeText(SearchPageActivity.this, "No image to search.", Toast.LENGTH_SHORT).show();
         }
+        else
+            Toast.makeText(SearchPageActivity.this, "No image to search.", Toast.LENGTH_SHORT).show();
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
         int id = item.getItemId();
 
-        if (id == R.id.action_sign_out) {
-            FirebaseAuth.getInstance().signOut();
-            startActivity(new Intent(SearchPageActivity.this, LoginActivity.class));
-            finish();
+        if (id == R.id.action_sign_out)
+        {
+            handleSignOut();
             return true;
         }
 
-        if (id == R.id.action_search_history) {
+        if (id == R.id.action_search_history)
+        {
             startActivity(new Intent(SearchPageActivity.this, HistoryActivity.class));
             return true;
         }
 
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_settings)
+        {
             startActivity(new Intent(SearchPageActivity.this, SettingsActivity.class));
             return true;
         }
 
-        if (id == R.id.action_about) {
+        if (id == R.id.action_about)
+        {
             showAboutDialog();
             return true;
         }
 
-        if (id == R.id.action_exit) {
+        if (id == R.id.action_exit)
+        {
             showExitConfirmationDialog();
             return true;
         }
@@ -226,9 +310,20 @@ public class SearchPageActivity extends AppCompatActivity implements View.OnClic
     }
 
     /**
-     * Shows a dialog to confirm if the user wants to exit the app.
+     * Handle user sign-out and navigate to the login screen
      */
-    private void showExitConfirmationDialog() {
+    private void handleSignOut()
+    {
+        FirebaseAuth.getInstance().signOut();
+        startActivity(new Intent(SearchPageActivity.this, LoginActivity.class));
+        finish();
+    }
+
+    /**
+     * Show a confirmation dialog to exit the application
+     */
+    private void showExitConfirmationDialog()
+    {
         new AlertDialog.Builder(this)
                 .setTitle("Exit")
                 .setMessage("Are you sure you want to exit?")
@@ -238,9 +333,10 @@ public class SearchPageActivity extends AppCompatActivity implements View.OnClic
     }
 
     /**
-     * Shows a dialog with information about the app.
+     * Show an about dialog with information about the app
      */
-    private void showAboutDialog() {
+    private void showAboutDialog()
+    {
         new AlertDialog.Builder(this)
                 .setTitle("About FindIt")
                 .setMessage(

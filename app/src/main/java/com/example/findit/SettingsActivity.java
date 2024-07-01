@@ -25,12 +25,15 @@ public class SettingsActivity extends AppCompatActivity implements CompoundButto
 {
 
     private Switch switchNotifications;
+    private Switch switchSavePictures;
     private Button btnEnablePermissions;
     private Button btnResetPassword;
     private Button btnClearHistory;
     private Button btnReturn;
 
     private Button btnEditProfile;
+
+    private static final String PREFS_NAME = "FindItPrefs";
 
 
     @Override
@@ -41,27 +44,28 @@ public class SettingsActivity extends AppCompatActivity implements CompoundButto
         init();
     }
 
-    /**
-     * Initialize UI elements, permissions launchers, load preferences, and set listeners
-     */
     private void init()
     {
         // Initialize UI elements
         switchNotifications = findViewById(R.id.switchNotificationsID);
+        switchSavePictures = findViewById(R.id.switchSavePicturesID);
         btnEnablePermissions = findViewById(R.id.btnEnablePermissionsID);
         btnResetPassword = findViewById(R.id.btnSettingsResetPasswordID);
         btnClearHistory = findViewById(R.id.btnClearHistoryID);
         btnReturn = findViewById(R.id.btnSettingsReturnID);
         btnEditProfile = findViewById(R.id.btnEditProfileID);
 
-
-        // Load current notification preference
-        SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
+        // Load current preferences
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         boolean notificationsEnabled = prefs.getBoolean("notifications_enabled", true);
+        boolean savePicturesEnabled = prefs.getBoolean("save_pictures_enabled", true);
+
         switchNotifications.setChecked(notificationsEnabled);
+        switchSavePictures.setChecked(savePicturesEnabled);
 
         // Set listeners
         switchNotifications.setOnCheckedChangeListener(this);
+        switchSavePictures.setOnCheckedChangeListener(this);
         btnEnablePermissions.setOnClickListener(this);
         btnResetPassword.setOnClickListener(this);
         btnClearHistory.setOnClickListener(this);
@@ -72,14 +76,22 @@ public class SettingsActivity extends AppCompatActivity implements CompoundButto
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked)
     {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+
         if (buttonView.getId() == R.id.switchNotificationsID)
         {
-            SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
-            SharedPreferences.Editor editor = prefs.edit();
             editor.putBoolean("notifications_enabled", isChecked);
-            editor.apply();
             Toast.makeText(SettingsActivity.this, isChecked ? "Notifications enabled." : "Notifications disabled.", Toast.LENGTH_SHORT).show();
         }
+
+        else if (buttonView.getId() == R.id.switchSavePicturesID)
+        {
+            editor.putBoolean("save_pictures_enabled", isChecked);
+            Toast.makeText(SettingsActivity.this, isChecked ? "Pictures will be saved in gallery." : "Pictures will not be saved in gallery.", Toast.LENGTH_SHORT).show();
+        }
+
+        editor.apply();
     }
 
 
@@ -165,14 +177,10 @@ public class SettingsActivity extends AppCompatActivity implements CompoundButto
                         });
             }
             else
-            {
                 Toast.makeText(SettingsActivity.this, "User email is not available.", Toast.LENGTH_SHORT).show();
-            }
         }
         else
-        {
             Toast.makeText(SettingsActivity.this, "No user is currently logged in.", Toast.LENGTH_SHORT).show();
-        }
     }
 
     /**
@@ -189,15 +197,12 @@ public class SettingsActivity extends AppCompatActivity implements CompoundButto
                 StorageReference userImagesRef = FirebaseStorage.getInstance().getReference().child("images/" + email);
                 userImagesRef.listAll().addOnSuccessListener(listResult -> {
                     for (StorageReference item : listResult.getItems())
-                    {
                         item.delete().addOnSuccessListener(aVoid -> Toast.makeText(SettingsActivity.this, "Search history cleared.", Toast.LENGTH_SHORT).show()).addOnFailureListener(e -> Toast.makeText(SettingsActivity.this, "Failed to delete image: " + e.getMessage(), Toast.LENGTH_SHORT).show());
-                    }
+
                 }).addOnFailureListener(e -> Toast.makeText(SettingsActivity.this, "Failed to list images: " + e.getMessage(), Toast.LENGTH_SHORT).show());
             }
         }
         else
-        {
             Toast.makeText(SettingsActivity.this, "User not authenticated.", Toast.LENGTH_SHORT).show();
-        }
     }
 }

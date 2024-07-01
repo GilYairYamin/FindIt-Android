@@ -5,6 +5,7 @@
     android:orientation="vertical"
     android:padding="16dp">
 
+    <!-- TextView for displaying the title "Settings" -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -14,12 +15,22 @@
         android:layout_gravity="center_horizontal"
         android:paddingBottom="16dp"/>
 
+    <!-- Switch for enabling or disabling notifications -->
     <Switch
         android:id="@+id/switchNotificationsID"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Enable Notifications"/>
 
+    <!-- Switch for enabling or disabling saving pictures in gallery -->
+    <Switch
+        android:id="@+id/switchSavePicturesID"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Save taken pictures in gallery"
+        android:layout_marginTop="16dp"/>
+
+    <!-- Button for enabling gallery and location permissions -->
     <Button
         android:id="@+id/btnEnablePermissionsID"
         android:layout_width="match_parent"
@@ -29,6 +40,7 @@
         android:background="#D5562E"
         android:textColor="@android:color/white"/>
 
+    <!-- Button for editing the user profile -->
     <Button
         android:id="@+id/btnEditProfileID"
         android:layout_width="match_parent"
@@ -38,6 +50,7 @@
         android:background="#D5562E"
         android:textColor="@android:color/white"/>
 
+    <!-- Button for clearing the search history -->
     <Button
         android:id="@+id/btnClearHistoryID"
         android:layout_width="match_parent"
@@ -47,6 +60,7 @@
         android:background="#D5562E"
         android:textColor="@android:color/white"/>
 
+    <!-- Button for resetting the password -->
     <Button
         android:id="@+id/btnSettingsResetPasswordID"
         android:layout_width="match_parent"
@@ -56,12 +70,13 @@
         android:background="#D5562E"
         android:textColor="@android:color/white"/>
 
-
+    <!-- Space to push the return button to the bottom -->
     <Space
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"/>
 
+    <!-- Button for returning to the previous screen -->
     <Button
         android:id="@+id/btnSettingsReturnID"
         android:layout_width="match_parent"

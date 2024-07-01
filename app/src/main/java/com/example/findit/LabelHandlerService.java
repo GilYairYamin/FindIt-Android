@@ -45,17 +45,16 @@ import java.util.Random;
  * LabelHandlerService is a service that handles image recognition and uploading tasks.
  * It uses Firebase ML Kit for image labeling and Firebase Storage for storing images with metadata.
  */
-public class LabelHandlerService extends Service implements LocationListener
-{
+public class LabelHandlerService extends Service implements LocationListener {
 
     public static final String EXTRA_IMAGE = "com.example.findit.EXTRA_IMAGE"; // Key for passing image data through Intent
     private static final String CHANNEL_ID = "recognizeImageChannel"; // Notification channel ID
     private static final String CHANNEL_NAME = "Image Recognition Channel"; // Notification channel name
-    private static final int NOTIFICATION_ID = 1; // Notification ID
-
+    private static final String PREFS_NAME = "FindItPrefs"; // SharedPreferences file name
+    private static final String KEY_TOAST_SHOWN = "locationPermissionToastShown"; // Key for tracking if the toast has been shown
     private Bitmap imageBitmap; // Bitmap of the image to be processed
     private LocationManager locationManager; // LocationManager for accessing device location
-    private String locationString = "Unknown"; // String to hold the location information
+    private String locationString = "Location not available."; // String to hold the location information
     private String bestLabel; // Best label found in image recognition
     private Handler handler; // Handler to post tasks to the main thread
 
@@ -85,22 +84,26 @@ public class LabelHandlerService extends Service implements LocationListener
                 imageBitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
                 createNotificationChannel();
                 recognizeImage(() -> {
-                    if (isPermissionGranted(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                    if (isPermissionGranted(Manifest.permission.ACCESS_FINE_LOCATION))
                         requestSingleLocationUpdate();
-                    } else {
-                        handler.post(() -> Toast.makeText(this, "Location permission denied.", Toast.LENGTH_SHORT).show());
-                        stopSelf();
+                    else
+                    {
+                        showLocationPermissionDeniedToastOnce();
+                        uploadImageToStorage(bestLabel, locationString);
                     }
                 });
             }
+
             else
             {
                 handler.post(() -> Toast.makeText(this, "Failed to load image data.", Toast.LENGTH_SHORT).show());
                 stopSelf();
             }
         }
+
         else
             stopSelf();
+
 
         return START_NOT_STICKY;
     }
@@ -123,7 +126,7 @@ public class LabelHandlerService extends Service implements LocationListener
      */
     private boolean areNotificationsEnabled()
     {
-        SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         return prefs.getBoolean("notifications_enabled", true);
     }
 
@@ -142,6 +145,8 @@ public class LabelHandlerService extends Service implements LocationListener
             Intent intent = new Intent(this, SearchPageActivity.class);
             PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
+            int notificationId = new Random().nextInt(100000); // Generate a random notification ID
+
             Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                     .setSmallIcon(R.drawable.notification_icon)
                     .setContentTitle(title)
@@ -149,7 +154,7 @@ public class LabelHandlerService extends Service implements LocationListener
                     .setContentIntent(pendingIntent)
                     .build();
 
-            notificationManager.notify(NOTIFICATION_ID, notification);
+            notificationManager.notify(notificationId, notification);
         }
     }
 
@@ -166,7 +171,8 @@ public class LabelHandlerService extends Service implements LocationListener
 
             labeler.processImage(image)
                     .addOnSuccessListener(firebaseVisionImageLabels -> {
-                        if (firebaseVisionImageLabels.isEmpty()) {
+                        if (firebaseVisionImageLabels.isEmpty())
+                        {
                             sendNotification("FindIt Result", "No labels found.");
                             handler.post(() -> Toast.makeText(this, "No labels found.", Toast.LENGTH_LONG).show());
                             onComplete.run();
@@ -207,7 +213,7 @@ public class LabelHandlerService extends Service implements LocationListener
         if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
             locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, this, null);
         else
-            uploadImageToStorage(bestLabel, "Unknown");
+            uploadImageToStorage(bestLabel, "Location not available.");
     }
 
     /**
@@ -252,6 +258,20 @@ public class LabelHandlerService extends Service implements LocationListener
     }
 
     /**
+     * Shows a toast message indicating that location permission is denied, but only once.
+     */
+    private void showLocationPermissionDeniedToastOnce()
+    {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        boolean toastShown = prefs.getBoolean(KEY_TOAST_SHOWN, false);
+        if (!toastShown)
+        {
+            handler.post(() -> Toast.makeText(this, "Location permission denied. Using default location.", Toast.LENGTH_SHORT).show());
+            prefs.edit().putBoolean(KEY_TOAST_SHOWN, true).apply();
+        }
+    }
+
+    /**
      * Callback for when the location has changed.
      *
      * @param location The new location
@@ -263,15 +283,21 @@ public class LabelHandlerService extends Service implements LocationListener
         double longitude = location.getLongitude();
         locationString = latitude + ", " + longitude;
 
-        if (Geocoder.isPresent()) {
+        if (Geocoder.isPresent())
+        {
             Geocoder geocoder = new Geocoder(this, Locale.getDefault());
-            try {
+            try
+            {
                 List<Address> addressList = geocoder.getFromLocation(latitude, longitude, 1);
-                if (addressList != null && !addressList.isEmpty()) {
+                if (addressList != null && !addressList.isEmpty())
+                {
                     Address address = addressList.get(0);
                     locationString = address.getAddressLine(0);
                 }
-            } catch (Exception e) {
+            }
+
+            catch (Exception e)
+            {
                 handler.post(() -> Toast.makeText(this, "Failed to get address from location", Toast.LENGTH_SHORT).show());
             }
         }
