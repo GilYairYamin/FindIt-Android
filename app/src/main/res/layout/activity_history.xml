@@ -53,7 +53,7 @@
 
     <!-- TextView to display no internet connection message -->
     <TextView
-        android:id="@+id/noInternetTextView"
+        android:id="@+id/noInternetTextViewID"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"

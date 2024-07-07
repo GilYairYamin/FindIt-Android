@@ -96,7 +96,7 @@ public class ProfilePageActivity extends AppCompatActivity implements View.OnCli
         txtCellphone = findViewById(R.id.etxtPhoneNumberID);
         txtPassword = findViewById(R.id.etxtPasswordID);
         profilePicture = findViewById(R.id.imgProfilePicID);
-        noInternetTextView = findViewById(R.id.noInternetTextView);
+        noInternetTextView = findViewById(R.id.noInternetTextViewID);
 
         btnCancel.setOnClickListener(this);
         btnSave.setOnClickListener(this);

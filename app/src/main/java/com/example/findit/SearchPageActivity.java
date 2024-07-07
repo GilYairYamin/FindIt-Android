@@ -2,9 +2,11 @@ package com.example.findit;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -36,6 +38,8 @@ import java.io.IOException;
 public class SearchPageActivity extends AppCompatActivity implements View.OnClickListener {
     // UI elements
     private Button btnUploadGallery, btnTakePicture, btnSearch;
+
+    private TextView tvLabelResult;
     private ActivityResultLauncher<Uri> cameraLauncher;
     private Bitmap imageBitmap;
     private ImageView imageView;
@@ -48,6 +52,8 @@ public class SearchPageActivity extends AppCompatActivity implements View.OnClic
     // Firebase instances
     private FirebaseAuth firebaseAuth;
     private FirebaseFirestore firestoreDB;
+
+    private LabelResultReceiver labelResultReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +68,28 @@ public class SearchPageActivity extends AppCompatActivity implements View.OnClic
 
         // Register for activity results
         registerActivityResults();
+
+        // Register the BroadcastReceiver to receive label results
+        registerLabelResultReceiver();
     }
+
+    @Override
+    protected void onDestroy()
+    {
+        super.onDestroy();
+        unregisterReceiver(labelResultReceiver);
+    }
+
+    /**
+     * Register the BroadcastReceiver to receive label results
+     */
+    private void registerLabelResultReceiver()
+    {
+        labelResultReceiver = new LabelResultReceiver(tvLabelResult);
+        IntentFilter filter = new IntentFilter("FindIt.LABEL_RESULT");
+        registerReceiver(labelResultReceiver, filter);
+    }
+
 
     /**
      * Initialize UI elements and set up click listeners
@@ -72,6 +99,7 @@ public class SearchPageActivity extends AppCompatActivity implements View.OnClic
         btnTakePicture = findViewById(R.id.btnTakePictureID);
         btnSearch = findViewById(R.id.btnSearchID);
         imageView = findViewById(R.id.imgViewID);
+        tvLabelResult = findViewById(R.id.tvLabelResultID);
 
         btnUploadGallery.setOnClickListener(this);
         btnTakePicture.setOnClickListener(this);

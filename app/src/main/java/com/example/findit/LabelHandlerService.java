@@ -193,14 +193,23 @@ public class LabelHandlerService extends Service implements LocationListener {
 
                         sendNotification("FindIt Result", "Found object: " + bestLabel);
                         handler.post(() -> Toast.makeText(this, "Found object: " + bestLabel, Toast.LENGTH_LONG).show());
+                        broadcastLabelResult(bestLabel);
                         onComplete.run();
                     })
                     .addOnFailureListener(e -> {
                         sendNotification("FindIt Result", "Failed to get data.");
                         handler.post(() -> Toast.makeText(this, "Failed to get data.", Toast.LENGTH_LONG).show());
+                        broadcastLabelResult("Failed to get data.");
                         onComplete.run();
                     });
         }).start();
+    }
+
+    private void broadcastLabelResult(String label)
+    {
+        Intent intent = new Intent("FindIt.LABEL_RESULT");
+        intent.putExtra("label", label);
+        sendBroadcast(intent);
     }
 
     /**
