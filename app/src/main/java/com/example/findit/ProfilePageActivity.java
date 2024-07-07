@@ -1,8 +1,6 @@
 package com.example.findit;
 
-import android.Manifest;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
@@ -14,8 +12,6 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.Task;
@@ -33,8 +29,6 @@ import java.util.Map;
 
 public class ProfilePageActivity extends AppCompatActivity implements View.OnClickListener
 {
-    private static final int REQUEST_CODE_READ_EXTERNAL_STORAGE = 100;
-
     // UI elements
     private Button btnSave, btnCancel;
     private EditText txtFirstName, txtLastName, txtEmail, txtCellphone, txtPassword;
@@ -223,7 +217,6 @@ public class ProfilePageActivity extends AppCompatActivity implements View.OnCli
         userRef.set(user)
                 .addOnSuccessListener(aVoid ->
                 {
-                    Toast.makeText(ProfilePageActivity.this, "User added successfully.", Toast.LENGTH_LONG).show();
                     uploadProfilePicture();
                 })
                 .addOnFailureListener(e ->
@@ -274,7 +267,6 @@ public class ProfilePageActivity extends AppCompatActivity implements View.OnCli
                     .child("profiles/" + email + "/profile_picture");
 
             profilePicRef.putFile(profileImageUri)
-                    .addOnSuccessListener(taskSnapshot -> Toast.makeText(ProfilePageActivity.this, "Profile picture uploaded successfully.", Toast.LENGTH_SHORT).show())
                     .addOnFailureListener(e -> Toast.makeText(ProfilePageActivity.this, "Failed to upload profile picture.\n" + e.getMessage(), Toast.LENGTH_LONG).show());
         }
     }
@@ -318,21 +310,6 @@ public class ProfilePageActivity extends AppCompatActivity implements View.OnCli
 
         if (v.getId() == R.id.imgProfilePicID)
         {
-            requestStoragePermission();
-        }
-    }
-
-    /**
-     * Request permission to read external storage
-     */
-    private void requestStoragePermission()
-    {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
-        {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_CODE_READ_EXTERNAL_STORAGE);
-        }
-        else
-        {
             openGallery();
         }
     }
@@ -343,22 +320,5 @@ public class ProfilePageActivity extends AppCompatActivity implements View.OnCli
     private void openGallery()
     {
         pickImageLauncher.launch("image/*");
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
-    {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_CODE_READ_EXTERNAL_STORAGE)
-        {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
-            {
-                openGallery();
-            }
-            else
-            {
-                Toast.makeText(this, "Permission Denied", Toast.LENGTH_SHORT).show();
-            }
-        }
     }
 }

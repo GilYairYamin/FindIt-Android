@@ -3,10 +3,12 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!-- permission for internet -->
-    <uses-permission android:name="android.permission.INTERNET" /> <!-- permissions for location -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- permissions for location -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> <!-- permissions for gallery -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" /> <!-- permissions for notifications -->
+
+    <!-- permissions for notifications -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
