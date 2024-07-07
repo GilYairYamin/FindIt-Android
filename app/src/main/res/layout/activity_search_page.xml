@@ -6,6 +6,32 @@
     android:layout_height="match_parent"
     tools:context=".SearchPageActivity">
 
+
+    <!-- Greeting TextView for displaying the logged-in user's name -->
+    <TextView
+        android:id="@+id/tvGreeting"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Hello, User"
+        android:textSize="18sp"
+        android:textColor="#000000"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="20dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true" />
+
+    <!-- TextView for displaying the latest found label -->
+    <TextView
+        android:id="@+id/tvLatestLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Latest found label: None"
+        android:textSize="16sp"
+        android:textColor="#000000"
+        android:layout_below="@id/tvGreeting"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp" />
+
     <!-- Main Image View for displaying the selected or captured image -->
     <ImageView
         android:id="@+id/imgViewID"
@@ -69,7 +95,7 @@
             android:layout_height="70dp"
             android:layout_marginTop="16dp"
             android:backgroundTint="#D5562E"
-            android:text="Search"
+            android:text="Search Object"
             android:textColor="#FFFFFF"
             android:padding="16dp"
             android:textSize="16sp" />

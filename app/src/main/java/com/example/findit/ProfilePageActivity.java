@@ -176,6 +176,12 @@ public class ProfilePageActivity extends AppCompatActivity implements View.OnCli
             return;
         }
 
+        if (txtFirstName.getText().toString().isEmpty())
+        {
+            Toast.makeText(ProfilePageActivity.this, "First name is mandatory.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
         if (!isValidEmail(txtEmail.getText().toString()))
         {
             Toast.makeText(ProfilePageActivity.this, "Invalid email address.", Toast.LENGTH_LONG).show();
@@ -308,7 +314,6 @@ public class ProfilePageActivity extends AppCompatActivity implements View.OnCli
         if (v.getId() == R.id.btnSaveRegisterID)
         {
             createUser();
-
         }
 
         if (v.getId() == R.id.imgProfilePicID)

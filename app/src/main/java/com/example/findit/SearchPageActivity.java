@@ -16,6 +16,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResult;
@@ -25,6 +26,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -42,13 +46,20 @@ public class SearchPageActivity extends AppCompatActivity implements View.OnClic
     private static final String KEY_PERMISSION_DIALOG_SHOWN = "locationPermissionDialogShown";
     private Uri imageUri;
 
+    // Firebase instances
+    private FirebaseAuth firebaseAuth;
+    private FirebaseFirestore firestoreDB;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search_page);
 
-        // Initialize UI elements and setup listeners
-        initUIElements();
+        // Initialize UI elements and Firebase instances
+        init();
+
+        // Set the greeting text with the logged-in user's name
+        setGreetingText();
 
         // Register for activity results
         registerActivityResults();
@@ -57,7 +68,7 @@ public class SearchPageActivity extends AppCompatActivity implements View.OnClic
     /**
      * Initialize UI elements and set up click listeners
      */
-    private void initUIElements()
+    private void init()
     {
         btnUploadGallery = findViewById(R.id.btnUploadGalleryID);
         btnTakePicture = findViewById(R.id.btnTakePictureID);
@@ -67,6 +78,9 @@ public class SearchPageActivity extends AppCompatActivity implements View.OnClic
         btnUploadGallery.setOnClickListener(this);
         btnTakePicture.setOnClickListener(this);
         btnSearch.setOnClickListener(this);
+
+        firebaseAuth = FirebaseAuth.getInstance();
+        firestoreDB = FirebaseFirestore.getInstance();
     }
 
     /**
@@ -345,5 +359,45 @@ public class SearchPageActivity extends AppCompatActivity implements View.OnClic
                                 "Date: 21/07/2024")
                 .setPositiveButton("OK", null)
                 .show();
+    }
+
+    /**
+     * Set the greeting text with the logged-in user's first name
+     */
+    private void setGreetingText()
+    {
+        TextView tvGreeting = findViewById(R.id.tvGreeting);
+        FirebaseUser currentUser = firebaseAuth.getCurrentUser();
+        if (currentUser != null)
+        {
+            String email = currentUser.getEmail();
+            if (email != null)
+            {
+                DocumentReference itemRef = firestoreDB.collection("Users").document(email);
+                itemRef.get().addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists())
+                    {
+                        String firstName = documentSnapshot.getString("firstName");
+                        if (firstName != null && !firstName.isEmpty()) {
+                            tvGreeting.setText("Hello, " + firstName);
+                        } else {
+                            tvGreeting.setText("Hello, User");
+                        }
+                    }
+
+                    else
+                        tvGreeting.setText("Hello, User");
+
+                }).addOnFailureListener(e -> {
+                    tvGreeting.setText("Hello, User");
+                });
+            }
+
+            else
+                tvGreeting.setText("Hello, User");
+        }
+
+        else
+            tvGreeting.setText("Hello, User");
     }
 }
