@@ -315,21 +315,21 @@ public class SearchPageActivity extends AppCompatActivity implements View.OnClic
                     if (documentSnapshot.exists()) {
                         String firstName = documentSnapshot.getString("firstName");
                         if (firstName != null && !firstName.isEmpty()) {
-                            tvGreeting.setText("Hello, " + firstName);
+                            tvGreeting.setText("Logged in as " + firstName);
                         } else {
-                            tvGreeting.setText("Hello, User");
+                            tvGreeting.setText("Logged in as an unknown user");
                         }
                     } else {
-                        tvGreeting.setText("Hello, User");
+                        tvGreeting.setText("Logged in as an unknown user");
                     }
                 }).addOnFailureListener(e -> {
-                    tvGreeting.setText("Hello, User");
+                    tvGreeting.setText("Logged in as an unknown user");
                 });
             } else {
-                tvGreeting.setText("Hello, User");
+                tvGreeting.setText("Logged in as an unknown user");
             }
         } else {
-            tvGreeting.setText("Hello, User");
+            tvGreeting.setText("Logged in as an unknown user");
         }
     }
 }

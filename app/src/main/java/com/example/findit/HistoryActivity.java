@@ -1,11 +1,17 @@
 package com.example.findit;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -30,6 +36,7 @@ public class HistoryActivity extends AppCompatActivity implements View.OnClickLi
     private List<ImageData> imageDataList;
     private ImageAdapter imageAdapter;
     private ImageView fullImageView;
+    private TextView noInternetTextView;
 
     // Firebase instances
     FirebaseAuth firebaseAuth;
@@ -48,8 +55,12 @@ public class HistoryActivity extends AppCompatActivity implements View.OnClickLi
         if (currentUser != null)
         {
             String userEmail = currentUser.getEmail();
-            fetchImages(userEmail);
+            if (isNetworkAvailable())
+                fetchImages(userEmail);
+            else
+                noInternetTextView.setVisibility(View.VISIBLE);
         }
+
         else
         {
             Toast.makeText(this, "User not logged in.", Toast.LENGTH_SHORT).show();
@@ -65,6 +76,7 @@ public class HistoryActivity extends AppCompatActivity implements View.OnClickLi
         btnReturn = findViewById(R.id.btnReturnID);
         listView = findViewById(R.id.lstViewID);
         fullImageView = findViewById(R.id.fullImageView);
+        noInternetTextView = findViewById(R.id.noInternetTextView);
 
         btnReturn.setOnClickListener(this);
 
@@ -77,6 +89,24 @@ public class HistoryActivity extends AppCompatActivity implements View.OnClickLi
     }
 
     /**
+     * Check if the network is available.
+     *
+     * @return true if the network is available, false otherwise.
+     */
+    private boolean isNetworkAvailable()
+    {
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        Network network = connectivityManager.getActiveNetwork();
+        if (network != null)
+        {
+            NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(network);
+            return capabilities != null && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+        }
+
+        return false;
+    }
+
+    /**
      * Fetch images from Firebase Storage and populate the list.
      *
      * @param userEmail The email of the logged-in user.
@@ -86,13 +116,11 @@ public class HistoryActivity extends AppCompatActivity implements View.OnClickLi
         StorageReference imagesRef = firebaseStorage.getReference().child("images/" + userEmail);
 
         imagesRef.listAll()
-                .addOnSuccessListener(listResult ->
-                {
+                .addOnSuccessListener(listResult -> {
                     for (StorageReference item : listResult.getItems())
                     {
                         item.getDownloadUrl().addOnSuccessListener(uri ->
-                                item.getMetadata().addOnSuccessListener(metadata ->
-                                {
+                                item.getMetadata().addOnSuccessListener(metadata -> {
                                     String name = item.getName().split("_")[0];
                                     String location = metadata.getCustomMetadata("location");
 
@@ -114,9 +142,8 @@ public class HistoryActivity extends AppCompatActivity implements View.OnClickLi
         if (v.getId() == R.id.btnReturnID)
         {
             if (fullImageView.getVisibility() == View.VISIBLE)
-            {
                 fullImageView.setVisibility(View.GONE);
-            }
+
             else
             {
                 startActivity(new Intent(HistoryActivity.this, SearchPageActivity.class));
@@ -145,8 +172,6 @@ public class HistoryActivity extends AppCompatActivity implements View.OnClickLi
     public void toggleFullScreenImage(View view)
     {
         if (fullImageView.getVisibility() == View.VISIBLE)
-        {
             fullImageView.setVisibility(View.GONE);
-        }
     }
 }

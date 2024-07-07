@@ -1,12 +1,17 @@
 package com.example.findit;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -33,6 +38,8 @@ public class ProfilePageActivity extends AppCompatActivity implements View.OnCli
     private Button btnSave, btnCancel;
     private EditText txtFirstName, txtLastName, txtEmail, txtCellphone, txtPassword;
     private ImageView profilePicture;
+
+    private TextView noInternetTextView;
 
     private User user;
     private Uri profileImageUri;
@@ -70,6 +77,10 @@ public class ProfilePageActivity extends AppCompatActivity implements View.OnCli
             disableEmailAndPasswordFields();
             displayUserProfile(currentUser.getEmail());
         }
+
+        // Check internet connection
+        if (!isNetworkAvailable())
+            showNoInternetConnection();
     }
 
     /**
@@ -85,6 +96,7 @@ public class ProfilePageActivity extends AppCompatActivity implements View.OnCli
         txtCellphone = findViewById(R.id.etxtPhoneNumberID);
         txtPassword = findViewById(R.id.etxtPasswordID);
         profilePicture = findViewById(R.id.imgProfilePicID);
+        noInternetTextView = findViewById(R.id.noInternetTextView);
 
         btnCancel.setOnClickListener(this);
         btnSave.setOnClickListener(this);
@@ -283,6 +295,39 @@ public class ProfilePageActivity extends AppCompatActivity implements View.OnCli
             startActivity(new Intent(ProfilePageActivity.this, SearchPageActivity.class));
         });
         signUpTask.addOnFailureListener(e -> Toast.makeText(ProfilePageActivity.this, e.getMessage(), Toast.LENGTH_LONG).show());
+    }
+
+    /**
+     * Show a message indicating no internet connection and disable other UI elements.
+     */
+    private void showNoInternetConnection()
+    {
+        noInternetTextView.setVisibility(View.VISIBLE);
+        btnSave.setEnabled(false);
+        txtFirstName.setEnabled(false);
+        txtLastName.setEnabled(false);
+        txtEmail.setEnabled(false);
+        txtCellphone.setEnabled(false);
+        txtPassword.setEnabled(false);
+        profilePicture.setEnabled(false);
+    }
+
+    /**
+     * Check if the network is available.
+     *
+     * @return true if the network is available, false otherwise.
+     */
+    private boolean isNetworkAvailable()
+    {
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        Network network = connectivityManager.getActiveNetwork();
+        if (network != null)
+        {
+            NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(network);
+            return capabilities != null && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+        }
+
+        return false;
     }
 
     @Override

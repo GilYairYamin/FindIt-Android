@@ -49,4 +49,19 @@
         android:background="#000000"
         android:visibility="gone"
         android:onClick="toggleFullScreenImage"/>
+
+
+    <!-- TextView to display no internet connection message -->
+    <TextView
+        android:id="@+id/noInternetTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="No internet connection available. \nPlease check your connection."
+        android:textSize="18sp"
+        android:textColor="#FF0000"
+        android:visibility="gone"
+        android:layout_centerInParent="true"/>
+
+
 </RelativeLayout>

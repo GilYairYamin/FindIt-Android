@@ -66,8 +66,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
      * If the email or password fields are empty, shows a toast message to inform the user.
      * Displays a toast message indicating whether the sign-in was successful or if there was an error.
      */
-    private void signIn()
-    {
+    private void signIn() {
         String email = etxtEmail.getText().toString();
         String password = etxtPassword.getText().toString();
 
@@ -94,14 +93,19 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 startActivity(intent);
                 finish();
             }
+
             else
             {
                 // Handle potential NullPointerException from getMessage()
                 String errorMessage = (task.getException() != null) ? task.getException().getMessage() : "Unknown error occurred";
-                Toast.makeText(LoginActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                if (errorMessage.toLowerCase().startsWith("a network"))
+                    Toast.makeText(LoginActivity.this, "Network problem. \nPlease check your connection.", Toast.LENGTH_LONG).show();
+                else
+                    Toast.makeText(LoginActivity.this, errorMessage, Toast.LENGTH_LONG).show();
             }
         });
     }
+
 
     /**
      * Displays an AlertDialog for resetting the password.
