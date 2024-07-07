@@ -35,7 +35,9 @@ public class HistoryActivity extends AppCompatActivity implements View.OnClickLi
     private List<ImageData> imageDataList;
     private ImageAdapter imageAdapter;
     private ImageView fullImageView;
+    private ImageView noInternetImageView;
     private TextView noInternetTextView;
+
 
     // Firebase instances
     FirebaseAuth firebaseAuth;
@@ -57,7 +59,10 @@ public class HistoryActivity extends AppCompatActivity implements View.OnClickLi
             if (isNetworkAvailable())
                 fetchImages(userEmail);
             else
+            {
                 noInternetTextView.setVisibility(View.VISIBLE);
+                noInternetImageView.setVisibility(View.VISIBLE);
+            }
         }
 
         else
@@ -76,6 +81,7 @@ public class HistoryActivity extends AppCompatActivity implements View.OnClickLi
         listView = findViewById(R.id.lstViewID);
         fullImageView = findViewById(R.id.fullImageView);
         noInternetTextView = findViewById(R.id.noInternetTextViewID);
+        noInternetImageView = findViewById(R.id.noInternetImageViewID);
 
         btnReturn.setOnClickListener(this);
 

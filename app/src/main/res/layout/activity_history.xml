@@ -50,18 +50,29 @@
         android:visibility="gone"
         android:onClick="toggleFullScreenImage"/>
 
+    <!-- ImageView to display no internet connection image -->
+    <ImageView
+        android:id="@+id/noInternetImageViewID"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:layout_marginBottom="60dp"
+        android:src="@drawable/sad_fox"
+        android:visibility="gone"/>
 
     <!-- TextView to display no internet connection message -->
     <TextView
         android:id="@+id/noInternetTextViewID"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
         android:gravity="center"
         android:text="No internet connection available. \nPlease check your connection."
         android:textSize="18sp"
         android:textColor="#FF0000"
         android:visibility="gone"
-        android:layout_centerInParent="true"/>
-
+        android:layout_marginBottom="100dp"
+        android:layout_centerHorizontal="true"/>
 
 </RelativeLayout>
