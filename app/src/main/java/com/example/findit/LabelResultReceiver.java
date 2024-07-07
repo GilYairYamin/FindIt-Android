@@ -22,7 +22,7 @@ public class LabelResultReceiver extends BroadcastReceiver
         if (intent != null && intent.hasExtra("label"))
         {
             String label = intent.getStringExtra("label");
-            tvLabelResult.setText("Label: " + label);
+            tvLabelResult.setText("Object: " + label);
         }
     }
 }
