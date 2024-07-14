@@ -7,6 +7,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -17,6 +18,9 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -281,6 +285,24 @@ public class LabelHandlerService extends Service implements LocationListener {
     }
 
     /**
+     * Check if the network is available.
+     *
+     * @return true if the network is available, false otherwise.
+     */
+    private boolean isNetworkAvailable()
+    {
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        Network network = connectivityManager.getActiveNetwork();
+        if (network != null)
+        {
+            NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(network);
+            return capabilities != null && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+        }
+
+        return false;
+    }
+
+    /**
      * Callback for when the location has changed.
      *
      * @param location The new location
@@ -307,6 +329,12 @@ public class LabelHandlerService extends Service implements LocationListener {
 
             catch (Exception e)
             {
+                if (!isNetworkAvailable())
+                {
+                    handler.post(() -> Toast.makeText(this, "Network not available. Using location coordinates.", Toast.LENGTH_SHORT).show());
+                    return;
+                }
+
                 handler.post(() -> Toast.makeText(this, "Failed to get address from location", Toast.LENGTH_SHORT).show());
             }
         }

@@ -1,8 +1,12 @@
 package com.example.findit;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -94,6 +98,24 @@ public class SettingsActivity extends AppCompatActivity implements CompoundButto
         editor.apply();
     }
 
+    /**
+     * Check if the network is available.
+     *
+     * @return true if the network is available, false otherwise.
+     */
+    private boolean isNetworkAvailable()
+    {
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        Network network = connectivityManager.getActiveNetwork();
+        if (network != null)
+        {
+            NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(network);
+            return capabilities != null && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+        }
+
+        return false;
+    }
+
 
     private void showClearHistoryDialog()
     {
@@ -101,6 +123,14 @@ public class SettingsActivity extends AppCompatActivity implements CompoundButto
                 .setMessage("Are you sure you want to clear your search history?")
                 .setPositiveButton("Clear History", (dialog, which) -> clearSearchHistory())
                 .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
+    private void showNoInternetDialog()
+    {
+        new AlertDialog.Builder(this)
+                .setMessage("No internet connection available. Please check your network settings.")
+                .setPositiveButton("Ok", (dialog, which) -> dialog.dismiss())
                 .show();
     }
 
@@ -121,7 +151,12 @@ public class SettingsActivity extends AppCompatActivity implements CompoundButto
 
         if (v.getId() == R.id.btnClearHistoryID)
         {
-            showClearHistoryDialog();
+            if (isNetworkAvailable())
+                showClearHistoryDialog();
+
+            else
+                showNoInternetDialog();
+
             return;
         }
 
@@ -134,7 +169,6 @@ public class SettingsActivity extends AppCompatActivity implements CompoundButto
         if (v.getId() == R.id.btnSettingsReturnID)
         {
             startActivity(new Intent(SettingsActivity.this, SearchPageActivity.class));
-            return;
         }
     }
 
