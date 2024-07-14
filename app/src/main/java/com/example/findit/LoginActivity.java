@@ -1,7 +1,11 @@
 package com.example.findit;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -106,6 +110,23 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         });
     }
 
+    /**
+     * Check if the network is available.
+     *
+     * @return true if the network is available, false otherwise.
+     */
+    private boolean isNetworkAvailable()
+    {
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        Network network = connectivityManager.getActiveNetwork();
+        if (network != null)
+        {
+            NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(network);
+            return capabilities != null && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+        }
+
+        return false;
+    }
 
     /**
      * Displays an AlertDialog for resetting the password.
@@ -142,6 +163,11 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                         }
                         else
                         {
+                            if (!isNetworkAvailable())
+                            {
+                                Toast.makeText(LoginActivity.this, "Network problem. \nPlease check your connection.", Toast.LENGTH_LONG).show();
+                                return;
+                            }
                             // Handle potential NullPointerException from getMessage()
                             String errorMessage = (task.getException() != null) ? task.getException().getMessage() : "Unknown error occurred";
                             Toast.makeText(LoginActivity.this, "Error sending reset email: " + errorMessage, Toast.LENGTH_SHORT).show();

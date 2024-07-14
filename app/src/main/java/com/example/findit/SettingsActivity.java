@@ -190,6 +190,12 @@ public class SettingsActivity extends AppCompatActivity implements CompoundButto
      */
     private void resetPassword()
     {
+        if (!isNetworkAvailable())
+        {
+            showNoInternetDialog();
+            return;
+        }
+
         FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = firebaseAuth.getCurrentUser();
         if (currentUser != null)
